@@ -235,7 +235,12 @@ function getTimeRange(
         case "this-year":
             const startOfYear = new Date(now.getFullYear(), 0, 1);
             startAt = startOfYear.getTime();
-            endAt = now.getTime();
+            const endOfCurrentMonth = new Date(
+                now.getFullYear(),
+                now.getMonth() + 1,
+                1
+            );
+            endAt = endOfCurrentMonth.getTime();
             unit = "month";
             break;
         default:

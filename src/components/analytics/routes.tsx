@@ -12,6 +12,12 @@ import { List, type RowComponentProps } from "react-window";
 import { JSX, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { AlignJustify } from "lucide-react";
+import {
+    TooltipProvider,
+    Tooltip,
+    TooltipTrigger,
+    TooltipContent,
+} from "../ui/tooltip";
 
 function truncateRoute(route: string, maxSegmentLength: number = 20): string {
     const parts = route.split("/");
@@ -38,20 +44,32 @@ function RowComponent({
     originalRoutes: PageviewData[];
 }>) {
     const route = originalRoutes[index];
+    const original = decodeURIComponent(route.x);
+    const truncated = truncateRoute(original);
+
+    const linkElement = (
+        <Link
+            href={process.env.NEXT_PUBLIC_BASE_URL + route.x}
+            className="flex justify-between text-sm hover:bg-accent py-1 pr-2"
+            prefetch={false}
+            target="_blank"
+            rel="noopener noreferrer"
+        >
+            <span className="truncate">{truncated}</span>
+            <span>{route.y} views</span>
+        </Link>
+    );
+
     return (
         <div style={style} key={index}>
-            <Link
-                href={process.env.NEXT_PUBLIC_BASE_URL + route.x}
-                className="flex justify-between text-sm hover:bg-accent py-1 pr-2"
-                prefetch={false}
-                target="_blank"
-                rel="noopener noreferrer"
-            >
-                <span className="truncate">
-                    {truncateRoute(decodeURIComponent(route.x))}
-                </span>
-                <span>{route.y} views</span>
-            </Link>
+            {truncated !== original ? (
+                <Tooltip delayDuration={700}>
+                    <TooltipTrigger asChild>{linkElement}</TooltipTrigger>
+                    <TooltipContent side="left">{original}</TooltipContent>
+                </Tooltip>
+            ) : (
+                linkElement
+            )}
             {index < originalRoutes.length - 1 && <Separator className="m-0" />}
         </div>
     );
@@ -92,18 +110,20 @@ function RoutesPopover({
                     className="border-t max-h-60 overflow-y-auto"
                     data-scrollbar-custom="true"
                 >
-                    {filteredRoutes.length > 0 ? (
-                        <List
-                            rowComponent={RowComponent}
-                            rowCount={filteredRoutes.length}
-                            rowHeight={28}
-                            rowProps={{ originalRoutes: filteredRoutes }}
-                        />
-                    ) : (
-                        <p className="text-sm text-muted-foreground p-2">
-                            No routes match your search.
-                        </p>
-                    )}
+                    <TooltipProvider>
+                        {filteredRoutes.length > 0 ? (
+                            <List
+                                rowComponent={RowComponent}
+                                rowCount={filteredRoutes.length}
+                                rowHeight={28}
+                                rowProps={{ originalRoutes: filteredRoutes }}
+                            />
+                        ) : (
+                            <p className="text-sm text-muted-foreground p-2">
+                                No routes match your search.
+                            </p>
+                        )}
+                    </TooltipProvider>
                 </div>
             </PopoverContent>
         </Popover>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getTimeRange, getUmamiMetricsSeries, MetricsType } from "@/lib/api";
 import { generateCacheHeaders, getCacheTimeForTimeframe } from "@/lib/cache";
+import cacheWrapper from "@/lib/node-cache-wrapper";
 
 export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
@@ -26,6 +27,14 @@ export async function GET(request: NextRequest) {
         );
     }
 
+    const cacheTime = getCacheTimeForTimeframe(timeframe);
+    const headers = generateCacheHeaders(cacheTime);
+    const cacheKey = `metrics_${timeframe}_${offset}_${type}`;
+    const cachedData = cacheWrapper.get(cacheKey);
+    if (cachedData) {
+        return NextResponse.json(cachedData, { headers });
+    }
+
     const websiteId = process.env.UMAMI_WEBSITE_ID;
     if (!websiteId) {
         return NextResponse.json(
@@ -44,8 +53,7 @@ export async function GET(request: NextRequest) {
             type
         );
 
-        const cacheTime = getCacheTimeForTimeframe(timeframe);
-        const headers = generateCacheHeaders(cacheTime);
+        cacheWrapper.set(cacheKey, metricsData, cacheTime);
         return NextResponse.json(metricsData, { headers });
     } catch (error) {
         console.error("Error fetching Umami metrics:", error);

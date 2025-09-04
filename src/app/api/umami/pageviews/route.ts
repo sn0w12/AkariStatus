@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getTimeRange, getUmamiPageviewsSeries } from "@/lib/api";
 import { generateCacheHeaders, getCacheTimeForTimeframe } from "@/lib/cache";
+import cacheWrapper from "@/lib/node-cache-wrapper";
 
 function padPageviewsData(
     data: { x: string; y: number }[],
@@ -65,6 +66,14 @@ export async function GET(request: NextRequest) {
     const timeframe = searchParams.get("timeframe") || "30d";
     const offset = parseInt(searchParams.get("offset") || "0");
 
+    const cacheTime = getCacheTimeForTimeframe(timeframe);
+    const headers = generateCacheHeaders(cacheTime);
+    const cacheKey = `pageviews_${timeframe}_${offset}`;
+    const cachedData = cacheWrapper.get(cacheKey);
+    if (cachedData) {
+        return NextResponse.json(cachedData, { headers });
+    }
+
     const websiteId = process.env.UMAMI_WEBSITE_ID;
     if (!websiteId) {
         return NextResponse.json(
@@ -82,14 +91,14 @@ export async function GET(request: NextRequest) {
             unit
         );
 
-        const cacheTime = getCacheTimeForTimeframe(timeframe);
-        const headers = generateCacheHeaders(cacheTime);
         const paddedData = padPageviewsData(
             pageviewsData,
             startAt,
             endAt,
             unit
         );
+
+        cacheWrapper.set(cacheKey, paddedData, cacheTime);
 
         return NextResponse.json(paddedData, { headers });
     } catch (error) {

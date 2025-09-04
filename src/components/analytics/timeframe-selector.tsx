@@ -36,7 +36,7 @@ export function TimeframeSelector({
     const [open, setOpen] = React.useState(false);
 
     const options = [
-        { value: "1d", label: "Today", days: 1 },
+        { value: "1d", label: "Last 24 hours", days: 1 },
         { value: "separator", label: "", days: 0 },
         { value: "this-week", label: "This week", days: 0 },
         { value: "7d", label: "Last 7 days", days: 7 },

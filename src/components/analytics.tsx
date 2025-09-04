@@ -169,12 +169,6 @@ const generatePlaceholderDataUTC = (
         const intervalMs =
             unit === "hour" ? 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
         const points = Math.ceil((endAt - startAt) / intervalMs);
-        console.log(
-            Array.from({ length: points }, (_, i) => ({
-                x: startAt + i * intervalMs,
-                y: 0,
-            }))
-        );
         return Array.from({ length: points }, (_, i) => ({
             x: startAt + i * intervalMs,
             y: 0,

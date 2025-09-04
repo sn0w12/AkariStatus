@@ -13,18 +13,29 @@ const generatePlaceholderDataUTC = (
     offset: number
 ): { x: number; y: number }[] => {
     const now = Date.now();
+    const nowDate = new Date(now);
     let startAt: number;
     let endAt: number;
     let unit: unit;
 
     switch (timeframe) {
         case "1d":
-            startAt = now - 24 * 60 * 60 * 1000;
-            endAt = now;
+            const currentHourStart = new Date(
+                Date.UTC(
+                    nowDate.getUTCFullYear(),
+                    nowDate.getUTCMonth(),
+                    nowDate.getUTCDate(),
+                    nowDate.getUTCHours(),
+                    0,
+                    0,
+                    0
+                )
+            );
+            endAt = currentHourStart.getTime() + 60 * 60 * 1000;
+            startAt = endAt - 24 * 60 * 60 * 1000;
             unit = "hour";
             break;
         case "this-week":
-            const nowDate = new Date(now);
             const dayOfWeek = nowDate.getUTCDay();
             const startOfWeek = new Date(
                 Date.UTC(

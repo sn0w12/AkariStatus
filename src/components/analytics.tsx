@@ -8,148 +8,156 @@ import { TimeframeSelector } from "@/components/analytics/timeframe-selector";
 import { useState, useEffect, useCallback } from "react";
 import { Routes } from "@/components/analytics/routes";
 
-const generatePlaceholderDataUTC = (
-    timeframe: string,
-    offset: number
-): { x: number; y: number }[] => {
+function getTimeRangeClient(timeframe: string, offset: number) {
     const now = Date.now();
     const nowDate = new Date(now);
     let startAt: number;
     let endAt: number;
     let unit: unit;
 
-    switch (timeframe) {
-        case "1d":
-            const currentHourStart = new Date(
-                Date.UTC(
-                    nowDate.getUTCFullYear(),
-                    nowDate.getUTCMonth(),
-                    nowDate.getUTCDate(),
-                    nowDate.getUTCHours(),
-                    0,
-                    0,
-                    0
-                )
-            );
-            endAt = currentHourStart.getTime() + 60 * 60 * 1000;
-            startAt = endAt - 24 * 60 * 60 * 1000;
-            unit = "hour";
-            break;
-        case "this-week":
-            const dayOfWeek = nowDate.getUTCDay();
-            const startOfWeek = new Date(
-                Date.UTC(
-                    nowDate.getUTCFullYear(),
-                    nowDate.getUTCMonth(),
-                    nowDate.getUTCDate() - dayOfWeek + 1,
-                    0,
-                    0,
-                    0,
-                    0
-                )
-            );
-            const endOfWeek = new Date(
-                Date.UTC(
-                    nowDate.getUTCFullYear(),
-                    nowDate.getUTCMonth(),
-                    nowDate.getUTCDate() - dayOfWeek + 7,
-                    23,
-                    59,
-                    59,
-                    999
-                )
-            );
-            startAt = startOfWeek.getTime();
-            endAt = endOfWeek.getTime();
-            unit = "day";
-            break;
-        case "7d":
-            startAt = now - 7 * 24 * 60 * 60 * 1000;
-            endAt = now;
-            unit = "day";
-            break;
-        case "this-month":
-            const nowDateMonth = new Date(now);
-            const startOfMonth = new Date(
-                Date.UTC(
-                    nowDateMonth.getUTCFullYear(),
-                    nowDateMonth.getUTCMonth(),
-                    1,
-                    0,
-                    0,
-                    0,
-                    0
-                )
-            );
-            const endOfMonth = new Date(
-                Date.UTC(
-                    nowDateMonth.getUTCFullYear(),
-                    nowDateMonth.getUTCMonth() + 1,
-                    1,
-                    0,
-                    0,
-                    0,
-                    0
-                )
-            );
-            startAt = startOfMonth.getTime();
-            endAt = endOfMonth.getTime();
-            unit = "day";
-            break;
-        case "30d":
-            startAt = now - 30 * 24 * 60 * 60 * 1000;
-            endAt = now;
-            unit = "day";
-            break;
-        case "90d":
-            startAt = now - 90 * 24 * 60 * 60 * 1000;
-            endAt = now;
-            unit = "day";
-            break;
-        case "12m":
-            const twelveMonthsAgo = new Date(now);
-            twelveMonthsAgo.setUTCMonth(twelveMonthsAgo.getUTCMonth() - 12);
-            twelveMonthsAgo.setUTCDate(1);
-            twelveMonthsAgo.setUTCHours(0, 0, 0, 0);
-            startAt = twelveMonthsAgo.getTime();
-            endAt = now;
-            unit = "month";
-            break;
-        case "this-year":
-            const nowDateYear = new Date(now);
-            const startOfYear = new Date(
-                Date.UTC(nowDateYear.getUTCFullYear(), 0, 1, 0, 0, 0, 0)
-            );
-            const endOfCurrentMonth = new Date(
-                Date.UTC(
-                    nowDateYear.getUTCFullYear(),
-                    nowDateYear.getUTCMonth() + 1,
-                    1,
-                    0,
-                    0,
-                    0,
-                    0
-                )
-            );
-            startAt = startOfYear.getTime();
-            endAt = endOfCurrentMonth.getTime();
-            unit = "month";
-            break;
-        default:
-            startAt = now - 30 * 24 * 60 * 60 * 1000;
-            endAt = now;
-            unit = "day";
-            break;
+    if (timeframe === "this-month") {
+        const shiftedDate = new Date(now);
+        shiftedDate.setUTCMonth(shiftedDate.getUTCMonth() + offset);
+        const startOfMonth = new Date(
+            Date.UTC(
+                shiftedDate.getUTCFullYear(),
+                shiftedDate.getUTCMonth(),
+                1,
+                0,
+                0,
+                0,
+                0
+            )
+        );
+        const endOfMonth = new Date(
+            Date.UTC(
+                shiftedDate.getUTCFullYear(),
+                shiftedDate.getUTCMonth() + 1,
+                1,
+                0,
+                0,
+                0,
+                0
+            )
+        );
+        startAt = startOfMonth.getTime();
+        endAt = endOfMonth.getTime();
+        unit = "day";
+    } else if (timeframe === "this-year") {
+        const shiftedDate = new Date(now);
+        shiftedDate.setUTCFullYear(shiftedDate.getUTCFullYear() + offset);
+        const startOfYear = new Date(
+            Date.UTC(shiftedDate.getUTCFullYear(), 0, 1, 0, 0, 0, 0)
+        );
+        const endOfCurrentMonth = new Date(
+            Date.UTC(
+                shiftedDate.getUTCFullYear(),
+                shiftedDate.getUTCMonth() + 1,
+                1,
+                0,
+                0,
+                0,
+                0
+            )
+        );
+        startAt = startOfYear.getTime();
+        endAt = endOfCurrentMonth.getTime();
+        unit = "month";
+    } else {
+        switch (timeframe) {
+            case "1d":
+                const currentHourStart = new Date(
+                    Date.UTC(
+                        nowDate.getUTCFullYear(),
+                        nowDate.getUTCMonth(),
+                        nowDate.getUTCDate(),
+                        nowDate.getUTCHours(),
+                        0,
+                        0,
+                        0
+                    )
+                );
+                endAt = currentHourStart.getTime() + 60 * 60 * 1000;
+                startAt = endAt - 24 * 60 * 60 * 1000;
+                unit = "hour";
+                break;
+            case "this-week":
+                const dayOfWeek = nowDate.getUTCDay();
+                const startOfWeek = new Date(
+                    Date.UTC(
+                        nowDate.getUTCFullYear(),
+                        nowDate.getUTCMonth(),
+                        nowDate.getUTCDate() - dayOfWeek + 1,
+                        0,
+                        0,
+                        0,
+                        0
+                    )
+                );
+                const endOfWeek = new Date(
+                    Date.UTC(
+                        nowDate.getUTCFullYear(),
+                        nowDate.getUTCMonth(),
+                        nowDate.getUTCDate() - dayOfWeek + 7,
+                        23,
+                        59,
+                        59,
+                        999
+                    )
+                );
+                startAt = startOfWeek.getTime();
+                endAt = endOfWeek.getTime();
+                unit = "day";
+                break;
+            case "7d":
+                startAt = now - 7 * 24 * 60 * 60 * 1000;
+                endAt = now;
+                unit = "day";
+                break;
+            case "30d":
+                startAt = now - 30 * 24 * 60 * 60 * 1000;
+                endAt = now;
+                unit = "day";
+                break;
+            case "90d":
+                startAt = now - 90 * 24 * 60 * 60 * 1000;
+                endAt = now;
+                unit = "day";
+                break;
+            case "12m":
+                const twelveMonthsAgo = new Date(now);
+                twelveMonthsAgo.setUTCMonth(twelveMonthsAgo.getUTCMonth() - 12);
+                twelveMonthsAgo.setUTCDate(1);
+                twelveMonthsAgo.setUTCHours(0, 0, 0, 0);
+                startAt = twelveMonthsAgo.getTime();
+                endAt = now;
+                unit = "month";
+                break;
+            default:
+                startAt = now - 30 * 24 * 60 * 60 * 1000;
+                endAt = now;
+                unit = "day";
+                break;
+        }
+
+        const shiftMs = offset * 24 * 60 * 60 * 1000;
+        startAt += shiftMs;
+        endAt += shiftMs;
+
+        const diffDays = (endAt - startAt) / (24 * 60 * 60 * 1000);
+        if (diffDays <= 2) unit = "hour";
+        else if (diffDays <= 90) unit = "day";
+        else unit = "month";
     }
 
-    const shiftMs = offset * 24 * 60 * 60 * 1000;
-    startAt += shiftMs;
-    endAt += shiftMs;
+    return { startAt, endAt, unit };
+}
 
-    const diffDays = (endAt - startAt) / (24 * 60 * 60 * 1000);
-    if (diffDays <= 2) unit = "hour";
-    else if (diffDays <= 90) unit = "day";
-    else unit = "month";
+const generatePlaceholderDataUTC = (
+    timeframe: string,
+    offset: number
+): { x: number; y: number }[] => {
+    const { startAt, endAt, unit } = getTimeRangeClient(timeframe, offset);
 
     if (unit === "month") {
         const startDate = new Date(startAt);
@@ -348,16 +356,21 @@ export function Analytics() {
     }, [timeframe, offset, fetchData]);
 
     useEffect(() => {
-        const { endAt: currentEnd, startAt: currentStart } = getTimeRange(
+        let shiftAmount: number;
+        if (timeframe === "this-month" || timeframe === "this-year") {
+            shiftAmount = 1;
+        } else {
+            const { endAt: currentEnd, startAt: currentStart } =
+                getTimeRangeClient(timeframe, offset);
+            shiftAmount = Math.round(
+                (currentEnd - currentStart) / (24 * 60 * 60 * 1000)
+            );
+        }
+        const { startAt: potentialNewStart } = getTimeRangeClient(
             timeframe,
-            offset
+            offset + shiftAmount
         );
-        const shiftDays = (currentEnd - currentStart) / (24 * 60 * 60 * 1000);
-        const potentialNewEnd = getTimeRange(
-            timeframe,
-            offset + shiftDays
-        ).endAt;
-        setCanShiftRight(potentialNewEnd <= Date.now());
+        setCanShiftRight(potentialNewStart <= Date.now());
     }, [timeframe, offset]);
 
     useEffect(() => {
@@ -506,21 +519,27 @@ export function Analytics() {
     };
 
     const shiftTimeframe = (direction: "left" | "right") => {
-        const { endAt: currentEnd, startAt: currentStart } = getTimeRange(
-            timeframe,
-            offset
+        let shiftAmount: number;
+        if (timeframe === "this-month" || timeframe === "this-year") {
+            shiftAmount = 1;
+        } else {
+            const { endAt: currentEnd, startAt: currentStart } =
+                getTimeRangeClient(timeframe, offset);
+            shiftAmount = Math.round(
+                (currentEnd - currentStart) / (24 * 60 * 60 * 1000)
+            );
+        }
+        const newOffset = Math.round(
+            offset + (direction === "left" ? -shiftAmount : shiftAmount)
         );
-        const shiftDays = (currentEnd - currentStart) / (24 * 60 * 60 * 1000);
-        const newOffset = Math.floor(
-            offset + (direction === "left" ? -shiftDays : shiftDays)
-        );
-        const { endAt: newEnd } = getTimeRange(timeframe, newOffset);
+        const { startAt: newStart } = getTimeRangeClient(timeframe, newOffset);
 
-        // Prevent shifting into the future (safety check, though button is disabled)
-        if (direction === "right" && newEnd > Date.now()) {
+        // Prevent shifting into the future
+        if (direction === "right" && newStart > Date.now()) {
             return;
         }
 
+        console.log(newOffset);
         setOffset(newOffset);
         const newUnit = getTimeRange(timeframe, newOffset).unit;
         setCurrentUnit(newUnit);

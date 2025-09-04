@@ -204,7 +204,11 @@ function getTimeRange(
             unit = "day";
             break;
         case "this-month":
-            const startOfMonthUTC = new Date(now);
+            const shiftedDateMonth = new Date(now);
+            shiftedDateMonth.setUTCMonth(
+                shiftedDateMonth.getUTCMonth() + offset
+            );
+            const startOfMonthUTC = new Date(shiftedDateMonth);
             startOfMonthUTC.setUTCDate(1);
             startOfMonthUTC.setUTCHours(0, 0, 0, 0);
             const endOfMonthUTC = new Date(
@@ -233,13 +237,21 @@ function getTimeRange(
             unit = "month";
             break;
         case "this-year":
-            const startOfYear = new Date(now.getFullYear(), 0, 1);
-            startAt = startOfYear.getTime();
-            const endOfCurrentMonth = new Date(
-                now.getFullYear(),
-                now.getMonth() + 1,
+            const shiftedDateYear = new Date(now);
+            shiftedDateYear.setUTCFullYear(
+                shiftedDateYear.getUTCFullYear() + offset
+            );
+            const startOfYear = new Date(
+                shiftedDateYear.getUTCFullYear(),
+                0,
                 1
             );
+            const endOfCurrentMonth = new Date(
+                shiftedDateYear.getUTCFullYear(),
+                shiftedDateYear.getUTCMonth() + 1,
+                1
+            );
+            startAt = startOfYear.getTime();
             endAt = endOfCurrentMonth.getTime();
             unit = "month";
             break;
@@ -250,16 +262,20 @@ function getTimeRange(
             break;
     }
 
-    // Apply offset shift (in days)
-    const shiftMs = offset * 24 * 60 * 60 * 1000;
-    startAt += shiftMs;
-    endAt += shiftMs;
+    // Apply offset shift (in days) only for non-fixed timeframes
+    if (timeframe !== "this-month" && timeframe !== "this-year") {
+        const shiftMs = offset * 24 * 60 * 60 * 1000;
+        startAt += shiftMs;
+        endAt += shiftMs;
+    }
 
-    // Recalculate unit based on shifted range
-    const diffDays = (endAt - startAt) / (24 * 60 * 60 * 1000);
-    if (diffDays <= 2) unit = "hour";
-    else if (diffDays <= 90) unit = "day";
-    else unit = "month";
+    // Recalculate unit based on shifted range (only for non-fixed timeframes)
+    if (timeframe !== "this-month" && timeframe !== "this-year") {
+        const diffDays = (endAt - startAt) / (24 * 60 * 60 * 1000);
+        if (diffDays <= 2) unit = "hour";
+        else if (diffDays <= 90) unit = "day";
+        else unit = "month";
+    }
 
     return { startAt, endAt, unit };
 }

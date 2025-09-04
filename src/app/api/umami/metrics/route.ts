@@ -5,6 +5,7 @@ import { generateCacheHeaders, getCacheTimeForTimeframe } from "@/lib/cache";
 export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const timeframe = searchParams.get("timeframe") || "30d";
+    const offset = parseInt(searchParams.get("offset") || "0");
     const type = searchParams.get("type") as MetricsType;
 
     if (
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-        const { startAt, endAt, unit } = getTimeRange(timeframe);
+        const { startAt, endAt, unit } = getTimeRange(timeframe, offset);
         const metricsData = await getUmamiMetricsSeries(
             websiteId,
             startAt,

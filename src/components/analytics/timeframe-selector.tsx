@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
-
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,15 +18,20 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 import { Separator } from "../ui/separator";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
 interface TimeframeSelectorProps {
     onTimeframeChange: (timeframe: string, days: number) => void;
     currentTimeframe: string;
+    onShift: (direction: "left" | "right") => void;
+    canShiftRight: boolean;
 }
 
 export function TimeframeSelector({
     onTimeframeChange,
     currentTimeframe,
+    onShift,
+    canShiftRight,
 }: TimeframeSelectorProps) {
     const [open, setOpen] = React.useState(false);
 
@@ -46,67 +50,84 @@ export function TimeframeSelector({
     ];
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-                <Button
-                    variant="default"
-                    role="combobox"
-                    aria-expanded={open}
-                    className="w-[200px] justify-between bg-card text-card-foreground border hover:bg-accent hover:text-accent-foreground transition-none"
-                >
-                    {currentTimeframe
-                        ? options.find(
-                              (option) => option.value === currentTimeframe
-                          )?.label
-                        : "Select timeframe..."}
-                    <ChevronsUpDown className="opacity-50" />
-                </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[200px] p-0">
-                <Command>
-                    <CommandInput
-                        placeholder="Search timeframe..."
-                        className="h-9"
-                    />
-                    <CommandList>
-                        <CommandEmpty>No timeframe found.</CommandEmpty>
-                        <CommandGroup>
-                            {options.map((option) =>
-                                option.value === "separator" ? (
-                                    <Separator
-                                        key={Math.random()}
-                                        className="my-1"
-                                    />
-                                ) : (
-                                    <CommandItem
-                                        key={option.value}
-                                        value={option.value}
-                                        className="cursor-pointer"
-                                        onSelect={() => {
-                                            onTimeframeChange(
-                                                option.value,
-                                                option.days
-                                            );
-                                            setOpen(false);
-                                        }}
-                                    >
-                                        {option.label}
-                                        <Check
-                                            className={cn(
-                                                "ml-auto",
-                                                currentTimeframe ===
-                                                    option.value
-                                                    ? "opacity-100"
-                                                    : "opacity-0"
-                                            )}
+        <div className="flex items-center gap-2">
+            <Button
+                variant="default"
+                onClick={() => onShift("left")}
+                className="bg-card text-card-foreground border hover:bg-accent hover:text-accent-foreground transition-none"
+            >
+                <ArrowLeft />
+            </Button>
+            <Button
+                variant="default"
+                onClick={() => onShift("right")}
+                disabled={!canShiftRight}
+                className="bg-card text-card-foreground border hover:bg-accent hover:text-accent-foreground transition-none"
+            >
+                <ArrowRight />
+            </Button>
+            <Popover open={open} onOpenChange={setOpen}>
+                <PopoverTrigger asChild>
+                    <Button
+                        variant="default"
+                        role="combobox"
+                        aria-expanded={open}
+                        className="w-[200px] justify-between bg-card text-card-foreground border hover:bg-accent hover:text-accent-foreground transition-none"
+                    >
+                        {currentTimeframe
+                            ? options.find(
+                                  (option) => option.value === currentTimeframe
+                              )?.label
+                            : "Select timeframe..."}
+                        <ChevronsUpDown className="opacity-50" />
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[200px] p-0">
+                    <Command>
+                        <CommandInput
+                            placeholder="Search timeframe..."
+                            className="h-9"
+                        />
+                        <CommandList>
+                            <CommandEmpty>No timeframe found.</CommandEmpty>
+                            <CommandGroup>
+                                {options.map((option) =>
+                                    option.value === "separator" ? (
+                                        <Separator
+                                            key={Math.random()}
+                                            className="my-1"
                                         />
-                                    </CommandItem>
-                                )
-                            )}
-                        </CommandGroup>
-                    </CommandList>
-                </Command>
-            </PopoverContent>
-        </Popover>
+                                    ) : (
+                                        <CommandItem
+                                            key={option.value}
+                                            value={option.value}
+                                            className="cursor-pointer"
+                                            onSelect={() => {
+                                                onTimeframeChange(
+                                                    option.value,
+                                                    option.days
+                                                );
+                                                setOpen(false);
+                                            }}
+                                        >
+                                            {option.label}
+                                            <Check
+                                                className={cn(
+                                                    "ml-auto",
+                                                    currentTimeframe ===
+                                                        option.value
+                                                        ? "opacity-100"
+                                                        : "opacity-0"
+                                                )}
+                                            />
+                                        </CommandItem>
+                                    )
+                                )}
+                            </CommandGroup>
+                        </CommandList>
+                    </Command>
+                </PopoverContent>
+            </Popover>
+        </div>
     );
 }

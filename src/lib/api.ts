@@ -165,19 +165,25 @@ async function getUmamiMetricsSeries(
     return await response.json();
 }
 
-function getTimeRange(timeframe: string): {
+function getTimeRange(
+    timeframe: string,
+    offset: number = 0
+): {
     startAt: number;
     endAt: number;
     unit: unit;
 } {
     const now = new Date();
+    let startAt: number;
+    let endAt: number;
+    let unit: unit;
+
     switch (timeframe) {
         case "1d":
-            return {
-                startAt: now.getTime() - 1 * 24 * 60 * 60 * 1000,
-                endAt: now.getTime(),
-                unit: "hour",
-            };
+            startAt = now.getTime() - 1 * 24 * 60 * 60 * 1000;
+            endAt = now.getTime();
+            unit = "hour";
+            break;
         case "this-week":
             const dayOfWeek = now.getUTCDay();
             const startOfWeekUTC = new Date(now);
@@ -188,17 +194,15 @@ function getTimeRange(timeframe: string): {
             const endOfWeekUTC = new Date(startOfWeekUTC);
             endOfWeekUTC.setUTCDate(startOfWeekUTC.getUTCDate() + 6);
             endOfWeekUTC.setUTCHours(0, 0, 0, 0);
-            return {
-                startAt: startOfWeekUTC.getTime(),
-                endAt: endOfWeekUTC.getTime(),
-                unit: "day",
-            };
+            startAt = startOfWeekUTC.getTime();
+            endAt = endOfWeekUTC.getTime();
+            unit = "day";
+            break;
         case "7d":
-            return {
-                startAt: now.getTime() - 6.5 * 24 * 60 * 60 * 1000,
-                endAt: now.getTime(),
-                unit: "day",
-            };
+            startAt = now.getTime() - 6.5 * 24 * 60 * 60 * 1000;
+            endAt = now.getTime();
+            unit = "day";
+            break;
         case "this-month":
             const startOfMonthUTC = new Date(now);
             startOfMonthUTC.setUTCDate(1);
@@ -209,43 +213,50 @@ function getTimeRange(timeframe: string): {
                 1
             );
             endOfMonthUTC.setUTCHours(0, 0, 0, 0);
-            return {
-                startAt: startOfMonthUTC.getTime(),
-                endAt: endOfMonthUTC.getTime(),
-                unit: "day",
-            };
+            startAt = startOfMonthUTC.getTime();
+            endAt = endOfMonthUTC.getTime();
+            unit = "day";
+            break;
         case "30d":
-            return {
-                startAt: now.getTime() - 29.5 * 24 * 60 * 60 * 1000,
-                endAt: now.getTime(),
-                unit: "day",
-            };
+            startAt = now.getTime() - 29.5 * 24 * 60 * 60 * 1000;
+            endAt = now.getTime();
+            unit = "day";
+            break;
         case "90d":
-            return {
-                startAt: now.getTime() - 89.5 * 24 * 60 * 60 * 1000,
-                endAt: now.getTime(),
-                unit: "day",
-            };
+            startAt = now.getTime() - 89.5 * 24 * 60 * 60 * 1000;
+            endAt = now.getTime();
+            unit = "day";
+            break;
         case "12m":
-            return {
-                startAt: now.getTime() - 365 * 24 * 60 * 60 * 1000,
-                endAt: now.getTime(),
-                unit: "month",
-            };
+            startAt = now.getTime() - 365 * 24 * 60 * 60 * 1000;
+            endAt = now.getTime();
+            unit = "month";
+            break;
         case "this-year":
             const startOfYear = new Date(now.getFullYear(), 0, 1);
-            return {
-                startAt: startOfYear.getTime(),
-                endAt: now.getTime(),
-                unit: "month",
-            };
+            startAt = startOfYear.getTime();
+            endAt = now.getTime();
+            unit = "month";
+            break;
         default:
-            return {
-                startAt: now.getTime() - 29.5 * 24 * 60 * 60 * 1000,
-                endAt: now.getTime(),
-                unit: "day",
-            };
+            startAt = now.getTime() - 29.5 * 24 * 60 * 60 * 1000;
+            endAt = now.getTime();
+            unit = "day";
+            break;
     }
+
+    // Apply offset shift (in days)
+    const shiftMs = offset * 24 * 60 * 60 * 1000;
+    startAt += shiftMs;
+    endAt += shiftMs;
+
+    // Recalculate unit based on shifted range
+    const diffDays = (endAt - startAt) / (24 * 60 * 60 * 1000);
+    if (diffDays <= 2) unit = "hour";
+    else if (diffDays <= 90) unit = "day";
+    else unit = "month";
+
+    return { startAt, endAt, unit };
 }
 
 export {

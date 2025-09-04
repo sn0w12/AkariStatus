@@ -28,6 +28,7 @@ function padPageviewsData(
 export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const timeframe = searchParams.get("timeframe") || "30d";
+    const offset = parseInt(searchParams.get("offset") || "0");
 
     const websiteId = process.env.UMAMI_WEBSITE_ID;
     if (!websiteId) {
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-        const { startAt, endAt, unit } = getTimeRange(timeframe);
+        const { startAt, endAt, unit } = getTimeRange(timeframe, offset);
         const pageviewsData = await getUmamiPageviewsSeries(
             websiteId,
             startAt,

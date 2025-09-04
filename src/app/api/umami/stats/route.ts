@@ -5,6 +5,7 @@ import { generateCacheHeaders, getCacheTimeForTimeframe } from "@/lib/cache";
 export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const timeframe = searchParams.get("timeframe") || "30d";
+    const offset = parseInt(searchParams.get("offset") || "0");
 
     const websiteId = process.env.UMAMI_WEBSITE_ID;
     if (!websiteId) {
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-        const { startAt, endAt } = getTimeRange(timeframe);
+        const { startAt, endAt } = getTimeRange(timeframe, offset);
         const stats = await getUmamiStats(websiteId, startAt, endAt);
         const cacheTime = getCacheTimeForTimeframe(timeframe);
         const headers = generateCacheHeaders(cacheTime);

@@ -1,6 +1,6 @@
 "use client";
 
-import { UmamiStats, PageviewData, getTimeRange } from "@/lib/api";
+import { UmamiStats, PageviewData, getTimeRange, unit } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PageviewsChart } from "@/components/analytics/pageviews-chart";
@@ -39,30 +39,21 @@ export function Analytics() {
 
     const [realtimeVisitors, setRealtimeVisitors] = useState(0);
 
-    const generatePlaceholderData = (currentTimeframe: string) => {
-        const { startAt, endAt, unit } = getTimeRange(currentTimeframe);
+    const [offset, setOffset] = useState<number>(0);
+    const [currentUnit, setCurrentUnit] = useState<unit>(
+        () => getTimeRange(timeframe).unit
+    );
+    const [canShiftRight, setCanShiftRight] = useState(true);
+
+    const generatePlaceholderData = (timeframe: string, offset: number) => {
+        const { startAt, endAt, unit } = getTimeRange(timeframe, offset);
         const intervalMs =
             unit === "hour"
                 ? 60 * 60 * 1000
                 : unit === "month"
                 ? 30 * 24 * 60 * 60 * 1000
                 : 24 * 60 * 60 * 1000;
-        let points;
-        if (currentTimeframe === "this-week") {
-            points = 7;
-        } else if (currentTimeframe === "this-month") {
-            const startDate = new Date(startAt);
-            const year = startDate.getUTCFullYear();
-            const month = startDate.getUTCMonth();
-            points = new Date(year, month + 2, 0).getUTCDate();
-        } else if (
-            currentTimeframe === "12m" ||
-            currentTimeframe === "this-year"
-        ) {
-            points = 12;
-        } else {
-            points = Math.ceil((endAt - startAt) / intervalMs);
-        }
+        const points = Math.ceil((endAt - startAt) / intervalMs);
         return Array.from({ length: points }, (_, i) => ({
             x: startAt + i * intervalMs,
             y: 0,
@@ -70,8 +61,8 @@ export function Analytics() {
     };
 
     const [chartData, setChartData] = useState(() => {
-        const placeholder = generatePlaceholderData(timeframe);
-        const { unit } = getTimeRange(timeframe);
+        const placeholder = generatePlaceholderData(timeframe, offset);
+        const { unit } = getTimeRange(timeframe, offset);
         return placeholder.map((item) => ({
             formattedDate:
                 unit === "hour"
@@ -152,30 +143,40 @@ export function Analytics() {
             .sort((a, b) => b.y - a.y);
     };
 
-    const fetchData = useCallback(async (currentTimeframe: string) => {
-        try {
-            setError(null);
+    const fetchData = useCallback(
+        async (currentTimeframe: string, currentOffset: number) => {
+            try {
+                setError(null);
 
-            const [statsRes, pageviewsRes, metricsRes] = await Promise.all([
-                fetch(`/api/umami/stats?timeframe=${currentTimeframe}`),
-                fetch(`/api/umami/pageviews?timeframe=${currentTimeframe}`),
-                fetch(
-                    `/api/umami/metrics?timeframe=${currentTimeframe}&type=url`
-                ),
-            ]);
+                const [statsRes, pageviewsRes, metricsRes] = await Promise.all([
+                    fetch(
+                        `/api/umami/stats?timeframe=${currentTimeframe}&offset=${currentOffset}`
+                    ),
+                    fetch(
+                        `/api/umami/pageviews?timeframe=${currentTimeframe}&offset=${currentOffset}`
+                    ),
+                    fetch(
+                        `/api/umami/metrics?timeframe=${currentTimeframe}&type=url&offset=${currentOffset}`
+                    ),
+                ]);
 
-            if (statsRes.ok) setStats(await statsRes.json());
-            if (pageviewsRes.ok) setPageviewsData(await pageviewsRes.json());
-            if (metricsRes.ok) {
-                const rawData = await metricsRes.json();
-                setOriginalMetricsData(rawData);
-                const transformed = transformMetricsData(rawData);
-                setMetricsData(transformed);
+                if (statsRes.ok) setStats(await statsRes.json());
+                if (pageviewsRes.ok)
+                    setPageviewsData(await pageviewsRes.json());
+                if (metricsRes.ok) {
+                    const rawData = await metricsRes.json();
+                    setOriginalMetricsData(rawData);
+                    const transformed = transformMetricsData(rawData);
+                    setMetricsData(transformed);
+                }
+            } catch {
+                setError(
+                    "Failed to load analytics data. Please try again later."
+                );
             }
-        } catch {
-            setError("Failed to load analytics data. Please try again later.");
-        }
-    }, []);
+        },
+        []
+    );
 
     const fetchRealtime = async () => {
         try {
@@ -190,8 +191,21 @@ export function Analytics() {
     };
 
     useEffect(() => {
-        fetchData(timeframe);
-    }, [timeframe, fetchData]);
+        fetchData(timeframe, offset);
+    }, [timeframe, offset, fetchData]);
+
+    useEffect(() => {
+        const { endAt: currentEnd, startAt: currentStart } = getTimeRange(
+            timeframe,
+            offset
+        );
+        const shiftDays = (currentEnd - currentStart) / (24 * 60 * 60 * 1000);
+        const potentialNewEnd = getTimeRange(
+            timeframe,
+            offset + shiftDays
+        ).endAt;
+        setCanShiftRight(potentialNewEnd <= Date.now());
+    }, [timeframe, offset]);
 
     useEffect(() => {
         if (stats) {
@@ -250,16 +264,15 @@ export function Analytics() {
 
     useEffect(() => {
         if (pageviewsData) {
-            const { unit } = getTimeRange(timeframe);
             const formatted = pageviewsData.map((item) => ({
                 formattedDate:
-                    unit === "hour"
+                    currentUnit === "hour"
                         ? new Date(item.x).toLocaleTimeString("en-US", {
                               hour: "numeric",
                               minute: "2-digit",
                               hour12: false,
                           })
-                        : unit === "month"
+                        : currentUnit === "month"
                         ? new Date(item.x).toLocaleDateString("en-US", {
                               month: "short",
                           })
@@ -271,7 +284,7 @@ export function Analytics() {
             }));
             setChartData(formatted);
         }
-    }, [pageviewsData, timeframe]);
+    }, [pageviewsData, currentUnit]);
 
     useEffect(() => {
         fetchRealtime();
@@ -279,9 +292,11 @@ export function Analytics() {
         return () => clearInterval(interval);
     }, []);
 
-    const handleTimeframeChange = (newTimeframe: string, newDays: number) => {
-        setTimeframe(newTimeframe);
-        setDays(newDays);
+    const resetDataAndUpdateChart = (
+        currentTimeframe: string,
+        currentOffset: number,
+        currentUnit: unit
+    ) => {
         // Reset data to show placeholders
         setStats(undefined);
         setPageviewsData(undefined);
@@ -302,18 +317,20 @@ export function Analytics() {
         setVisitsPercent(0);
         setBouncesPercent(0);
         // Update placeholder chart data
-        const placeholder = generatePlaceholderData(newTimeframe);
-        const { unit } = getTimeRange(newTimeframe);
+        const placeholder = generatePlaceholderData(
+            currentTimeframe,
+            currentOffset
+        );
         setChartData(
             placeholder.map((item) => ({
                 formattedDate:
-                    unit === "hour"
+                    currentUnit === "hour"
                         ? new Date(item.x).toLocaleTimeString("en-US", {
                               hour: "numeric",
                               minute: "2-digit",
                               hour12: false,
                           })
-                        : unit === "month"
+                        : currentUnit === "month"
                         ? new Date(item.x).toLocaleDateString("en-US", {
                               month: "short",
                           })
@@ -326,13 +343,66 @@ export function Analytics() {
         );
     };
 
-    const getDisplayText = (currentTimeframe: string, currentDays: number) => {
-        if (currentTimeframe === "1d") return "Last 24 Hours";
-        if (currentTimeframe === "this-week") return "Last week";
-        if (currentTimeframe === "this-month") return "Last month";
-        if (currentTimeframe === "12m") return "Last 12 Months";
-        if (currentTimeframe === "this-year") return "This Year";
-        return `Last ${currentDays} Days`;
+    const handleTimeframeChange = (newTimeframe: string, newDays: number) => {
+        setTimeframe(newTimeframe);
+        setDays(newDays);
+        setOffset(0);
+        const newUnit = getTimeRange(newTimeframe).unit;
+        setCurrentUnit(newUnit);
+        resetDataAndUpdateChart(newTimeframe, 0, newUnit);
+    };
+
+    const shiftTimeframe = (direction: "left" | "right") => {
+        const { endAt: currentEnd, startAt: currentStart } = getTimeRange(
+            timeframe,
+            offset
+        );
+        const shiftDays = (currentEnd - currentStart) / (24 * 60 * 60 * 1000);
+        const newOffset = Math.floor(
+            offset + (direction === "left" ? -shiftDays : shiftDays)
+        );
+        const { endAt: newEnd } = getTimeRange(timeframe, newOffset);
+
+        // Prevent shifting into the future (safety check, though button is disabled)
+        if (direction === "right" && newEnd > Date.now()) {
+            return;
+        }
+
+        setOffset(newOffset);
+        const newUnit = getTimeRange(timeframe, newOffset).unit;
+        setCurrentUnit(newUnit);
+        resetDataAndUpdateChart(timeframe, newOffset, newUnit);
+    };
+
+    const getDisplayText = (
+        currentTimeframe: string,
+        currentDays: number,
+        currentOffset: number
+    ) => {
+        if (currentOffset === 0) {
+            if (currentTimeframe === "1d") return "Last 24 Hours";
+            if (currentTimeframe === "this-week") return "Last week";
+            if (currentTimeframe === "this-month") return "Last month";
+            if (currentTimeframe === "12m") return "Last 12 Months";
+            if (currentTimeframe === "this-year") return "This Year";
+            return `Last ${currentDays} Days`;
+        } else {
+            const { startAt, endAt } = getTimeRange(
+                currentTimeframe,
+                currentOffset
+            );
+            const startDate = new Date(startAt).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+            });
+            const endDate = new Date(endAt).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+            });
+            return `From ${startDate} to ${endDate}`;
+        }
     };
 
     const [originalRoutesMap, setOriginalRoutesMap] = useState<
@@ -413,13 +483,15 @@ export function Analytics() {
             <CardHeader className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <CardTitle>
-                        Analytics ({getDisplayText(timeframe, days)})
+                        Analytics ({getDisplayText(timeframe, days, offset)})
                     </CardTitle>
                     <Badge variant="secondary">{realtimeVisitors} Online</Badge>
                 </div>
                 <TimeframeSelector
                     onTimeframeChange={handleTimeframeChange}
                     currentTimeframe={timeframe}
+                    onShift={shiftTimeframe}
+                    canShiftRight={canShiftRight}
                 />
             </CardHeader>
             <CardContent>

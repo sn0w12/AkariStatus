@@ -18,6 +18,7 @@ import {
     TooltipTrigger,
     TooltipContent,
 } from "../ui/tooltip";
+import { Skeleton } from "../ui/skeleton";
 
 function truncateRoute(route: string, maxSegmentLength: number = 20): string {
     const parts = route.split("/");
@@ -186,9 +187,13 @@ export function Routes({
                     ) : (
                         <div key={index}>{routeItem}</div>
                     );
-                }) || (
-                    <p className="text-muted-foreground">Loading routes...</p>
-                )}
+                }) ||
+                    Array.from({ length: 11 }).map((_, index) => (
+                        <Skeleton
+                            key={index}
+                            className="h-[30px] w-full rounded-lg"
+                        />
+                    ))}
             </div>
         </div>
     );

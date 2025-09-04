@@ -45,8 +45,8 @@ export function TimeframeSelector({
         { value: "30d", label: "Last 30 days", days: 30 },
         { value: "90d", label: "Last 90 days", days: 90 },
         { value: "separator", label: "", days: 0 },
-        { value: "12m", label: "Last 12 months", days: 365 },
         { value: "this-year", label: "This year", days: 0 },
+        { value: "12m", label: "Last 12 months", days: 365 },
     ];
 
     return (

@@ -22,6 +22,7 @@ import {
     transformMetricsData,
 } from "@/lib/analytics";
 import { StatCard } from "./analytics/stat-card";
+import { animateNumber } from "@/lib/utils";
 
 export function Analytics() {
     const [timeframe, setTimeframe] = useState("30d");
@@ -65,34 +66,6 @@ export function Analytics() {
             Sessions: 0,
         }));
     });
-
-    const animateNumber = (
-        target: number,
-        setter: (value: number) => void,
-        duration = 500,
-        initialValue = 0,
-        easing: (t: number) => number = (t) => 1 - Math.pow(1 - t, 3)
-    ) => {
-        const startValue = initialValue;
-        const change = target - startValue;
-        const startTime = performance.now();
-
-        const animate = (currentTime: number) => {
-            const elapsed = currentTime - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-            const easedProgress = easing(progress);
-            const currentValue = startValue + change * easedProgress;
-            setter(Math.round(currentValue));
-
-            if (progress < 1) {
-                requestAnimationFrame(animate);
-            } else {
-                setter(target);
-            }
-        };
-
-        requestAnimationFrame(animate);
-    };
 
     const fetchData = useCallback(
         async (currentTimeframe: string, currentOffset: number) => {

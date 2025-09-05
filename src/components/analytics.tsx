@@ -17,6 +17,9 @@ import {
     formatDate,
     generatePlaceholderDataUTC,
     getTimeRangeClient,
+    getTransformedKey,
+    transformedRoutes,
+    transformMetricsData,
 } from "@/lib/analytics";
 import { StatCard } from "./analytics/stat-card";
 
@@ -89,38 +92,6 @@ export function Analytics() {
         };
 
         requestAnimationFrame(animate);
-    };
-
-    const transformMetricsData = (data: MetricsData[]): MetricsData[] => {
-        const map = new Map<string, number>();
-        for (const item of data) {
-            let transformedX = item.x;
-            if (
-                item.x.startsWith("/manga/") &&
-                item.x.split("/").length === 3
-            ) {
-                transformedX = "/manga/[id]";
-            } else if (
-                item.x.startsWith("/manga/") &&
-                item.x.includes("/chapter-")
-            ) {
-                transformedX = "/manga/[id]/[subId]";
-            } else if (
-                item.x.startsWith("/genre/") &&
-                item.x.split("/").length === 3
-            ) {
-                transformedX = "/genre/[id]";
-            } else if (
-                item.x.startsWith("/author/") &&
-                item.x.split("/").length === 3
-            ) {
-                transformedX = "/author/[id]";
-            }
-            map.set(transformedX, (map.get(transformedX) || 0) + item.y);
-        }
-        return Array.from(map.entries())
-            .map(([x, y]) => ({ x, y }))
-            .sort((a, b) => b.y - a.y);
     };
 
     const fetchData = useCallback(
@@ -373,38 +344,10 @@ export function Analytics() {
     useEffect(() => {
         if (originalMetricsData) {
             const map = new Map<string, MetricsData[]>();
-            const transformedKeys = [
-                "/manga/[id]",
-                "/manga/[id]/[subId]",
-                "/genre/[id]",
-                "/author/[id]",
-            ];
-
-            for (const key of transformedKeys) {
+            for (const key of transformedRoutes) {
                 const filtered = originalMetricsData
                     .filter((item) => {
-                        if (key === "/manga/[id]") {
-                            return (
-                                item.x.startsWith("/manga/") &&
-                                item.x.split("/").length === 3
-                            );
-                        } else if (key === "/manga/[id]/[subId]") {
-                            return (
-                                item.x.startsWith("/manga/") &&
-                                item.x.includes("/chapter-")
-                            );
-                        } else if (key === "/genre/[id]") {
-                            return (
-                                item.x.startsWith("/genre/") &&
-                                item.x.split("/").length === 3
-                            );
-                        } else if (key === "/author/[id]") {
-                            return (
-                                item.x.startsWith("/author/") &&
-                                item.x.split("/").length === 3
-                            );
-                        }
-                        return false;
+                        return getTransformedKey(item.x) === key;
                     })
                     .sort((a, b) => b.y - a.y);
                 map.set(key, filtered);
@@ -419,15 +362,6 @@ export function Analytics() {
         },
         [originalRoutesMap]
     );
-
-    const isTransformedRoute = (route: string): boolean => {
-        return (
-            route === "/manga/[id]" ||
-            route === "/manga/[id]/[subId]" ||
-            route === "/genre/[id]" ||
-            route === "/author/[id]"
-        );
-    };
 
     if (error) {
         return (
@@ -490,7 +424,6 @@ export function Analytics() {
                     <Routes
                         metricsData={metricsData}
                         getOriginalRoutes={getOriginalRoutes}
-                        isTransformedRoute={isTransformedRoute}
                     />
                 </div>
             </CardContent>

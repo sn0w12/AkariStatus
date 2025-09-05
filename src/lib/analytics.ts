@@ -1,4 +1,4 @@
-import { unit } from "@/lib/api";
+import { MetricsData, unit } from "@/lib/api";
 
 export function getTimeRangeClient(timeframe: string, offset: number) {
     const now = Date.now();
@@ -191,4 +191,51 @@ export function formatDate(date: string, unit: unit): string {
               month: "short",
               day: "numeric",
           });
+}
+
+export const routeTransformations = [
+    {
+        key: "/manga/[id]",
+        condition: (x: string) =>
+            x.startsWith("/manga/") && x.split("/").length === 3,
+    },
+    {
+        key: "/manga/[id]/[subId]",
+        condition: (x: string) =>
+            x.startsWith("/manga/") && x.includes("/chapter-"),
+    },
+    {
+        key: "/genre/[id]",
+        condition: (x: string) =>
+            x.startsWith("/genre/") && x.split("/").length === 3,
+    },
+    {
+        key: "/author/[id]",
+        condition: (x: string) =>
+            x.startsWith("/author/") && x.split("/").length === 3,
+    },
+];
+
+export const transformedRoutes = routeTransformations.map((t) => t.key);
+
+export function getTransformedKey(x: string): string | null {
+    for (const { key, condition } of routeTransformations) {
+        if (condition(x)) return key;
+    }
+    return null;
+}
+
+export function transformMetricsData(data: MetricsData[]): MetricsData[] {
+    const map = new Map<string, number>();
+    for (const item of data) {
+        const transformedX = getTransformedKey(item.x) || item.x;
+        map.set(transformedX, (map.get(transformedX) || 0) + item.y);
+    }
+    return Array.from(map.entries())
+        .map(([x, y]) => ({ x, y }))
+        .sort((a, b) => b.y - a.y);
+}
+
+export function isTransformedRoute(route: string): boolean {
+    return transformedRoutes.includes(route);
 }

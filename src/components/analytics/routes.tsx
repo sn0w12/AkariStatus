@@ -19,6 +19,7 @@ import {
     TooltipContent,
 } from "../ui/tooltip";
 import { Skeleton } from "../ui/skeleton";
+import { isTransformedRoute } from "@/lib/analytics";
 
 function truncateRoute(route: string, maxSegmentLength: number = 20): string {
     const parts = route.split("/");
@@ -34,7 +35,6 @@ function truncateRoute(route: string, maxSegmentLength: number = 20): string {
 interface RoutesProps {
     metricsData: MetricsData[] | undefined;
     getOriginalRoutes: (transformedKey: string) => MetricsData[];
-    isTransformedRoute: (route: string) => boolean;
 }
 
 function RowComponent({
@@ -134,7 +134,6 @@ function RoutesPopover({
 export function Routes({
     metricsData,
     getOriginalRoutes,
-    isTransformedRoute,
 }: RoutesProps) {
     return (
         <div>

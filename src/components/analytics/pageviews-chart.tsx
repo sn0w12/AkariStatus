@@ -8,7 +8,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts";
 
 interface PageviewsChartProps {
-    data: { formattedDate: string; Views: number }[];
+    data: { formattedDate: string; Views: number; Sessions: number }[];
 }
 
 export function PageviewsChart({ data }: PageviewsChartProps) {
@@ -17,9 +17,13 @@ export function PageviewsChart({ data }: PageviewsChartProps) {
             <h4 className="text-lg font-semibold">Views Over Time</h4>
             <ChartContainer
                 config={{
-                    pageviews: {
-                        label: "Pageviews",
-                        color: "hsl(var(--positive))",
+                    Views: {
+                        label: "Views",
+                        color: "var(--positive)",
+                    },
+                    Sessions: {
+                        label: "Sessions",
+                        color: "var(--primary)",
                     },
                 }}
                 className="h-[400px] w-full"
@@ -33,7 +37,16 @@ export function PageviewsChart({ data }: PageviewsChartProps) {
                         />
                         <YAxis tick={{ fontSize: 12 }} />
                         <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="Views" fill="var(--color-primary)" />
+                        <Bar
+                            dataKey="Sessions"
+                            stackId="a"
+                            fill="var(--color-positive)"
+                        />
+                        <Bar
+                            dataKey="Views"
+                            stackId="a"
+                            fill="var(--color-primary)"
+                        />
                     </BarChart>
                 </ResponsiveContainer>
             </ChartContainer>

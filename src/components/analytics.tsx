@@ -1,6 +1,12 @@
 "use client";
 
-import { UmamiStats, PageviewData, getTimeRange, unit } from "@/lib/api";
+import {
+    UmamiStats,
+    PageviewData,
+    getTimeRange,
+    unit,
+    MetricsData,
+} from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageviewsChart } from "@/components/analytics/pageviews-chart";
 import { TimeframeSelector } from "@/components/analytics/timeframe-selector";
@@ -18,13 +24,11 @@ export function Analytics() {
     const [days, setDays] = useState(30);
     const [stats, setStats] = useState<UmamiStats | undefined>();
     const [pageviewsData, setPageviewsData] = useState<
-        PageviewData[] | undefined
+        PageviewData | undefined
     >();
-    const [metricsData, setMetricsData] = useState<
-        PageviewData[] | undefined
-    >();
+    const [metricsData, setMetricsData] = useState<MetricsData[] | undefined>();
     const [originalMetricsData, setOriginalMetricsData] = useState<
-        PageviewData[] | undefined
+        MetricsData[] | undefined
     >();
     const [error, setError] = useState<string | null>(null);
 
@@ -68,6 +72,7 @@ export function Analytics() {
                           day: "numeric",
                       }),
             Views: item.y,
+            Sessions: 0,
         }));
     });
 
@@ -99,7 +104,7 @@ export function Analytics() {
         requestAnimationFrame(animate);
     };
 
-    const transformMetricsData = (data: PageviewData[]): PageviewData[] => {
+    const transformMetricsData = (data: MetricsData[]): MetricsData[] => {
         const map = new Map<string, number>();
         for (const item of data) {
             let transformedX = item.x;
@@ -245,7 +250,7 @@ export function Analytics() {
 
     useEffect(() => {
         if (pageviewsData) {
-            const formatted = pageviewsData.map((item) => ({
+            const formatted = pageviewsData.pageviews.map((item, index) => ({
                 formattedDate:
                     currentUnit === "hour"
                         ? new Date(item.x).toLocaleTimeString("en-US", {
@@ -262,6 +267,7 @@ export function Analytics() {
                               day: "numeric",
                           }),
                 Views: item.y,
+                Sessions: pageviewsData.sessions[index]?.y || 0,
             }));
             setChartData(formatted);
         }
@@ -314,6 +320,7 @@ export function Analytics() {
                               day: "numeric",
                           }),
                 Views: item.y,
+                Sessions: 0, // Placeholder for sessions
             }))
         );
     };
@@ -387,12 +394,12 @@ export function Analytics() {
     };
 
     const [originalRoutesMap, setOriginalRoutesMap] = useState<
-        Map<string, PageviewData[]>
+        Map<string, MetricsData[]>
     >(new Map());
 
     useEffect(() => {
         if (originalMetricsData) {
-            const map = new Map<string, PageviewData[]>();
+            const map = new Map<string, MetricsData[]>();
             const transformedKeys = [
                 "/manga/[id]",
                 "/manga/[id]/[subId]",
@@ -434,7 +441,7 @@ export function Analytics() {
     }, [originalMetricsData]);
 
     const getOriginalRoutes = useCallback(
-        (transformedKey: string): PageviewData[] => {
+        (transformedKey: string): MetricsData[] => {
             return originalRoutesMap.get(transformedKey) || [];
         },
         [originalRoutesMap]

@@ -1,6 +1,6 @@
 "use client";
 
-import { PageviewData } from "@/lib/api";
+import { PageviewData, MetricsData } from "@/lib/api";
 import { Separator } from "@/components/ui/separator";
 import {
     Popover,
@@ -32,8 +32,8 @@ function truncateRoute(route: string, maxSegmentLength: number = 20): string {
 }
 
 interface RoutesProps {
-    metricsData: PageviewData[] | undefined;
-    getOriginalRoutes: (transformedKey: string) => PageviewData[];
+    metricsData: MetricsData[] | undefined;
+    getOriginalRoutes: (transformedKey: string) => MetricsData[];
     isTransformedRoute: (route: string) => boolean;
 }
 
@@ -42,7 +42,7 @@ function RowComponent({
     style,
     originalRoutes,
 }: RowComponentProps<{
-    originalRoutes: PageviewData[];
+    originalRoutes: MetricsData[];
 }>) {
     const route = originalRoutes[index];
     const original = decodeURIComponent(route.x);
@@ -81,8 +81,8 @@ function RoutesPopover({
     originalRoutes,
     routeItem,
 }: {
-    item: PageviewData;
-    originalRoutes: PageviewData[];
+    item: MetricsData;
+    originalRoutes: MetricsData[];
     routeItem: JSX.Element;
 }) {
     const [searchQuery, setSearchQuery] = useState("");

@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getTimeRange, getUmamiPageviewsSeries } from "@/lib/api";
+import { getTimeRange, getUmamiPageviewsSeries, Graph } from "@/lib/api";
 import { generateCacheHeaders, getCacheTimeForTimeframe } from "@/lib/cache";
 import cacheWrapper from "@/lib/node-cache-wrapper";
 
 function padPageviewsData(
-    data: { x: string; y: number }[],
+    data: Graph,
     startAt: number,
     endAt: number,
     unit: string
-): { x: string; y: number }[] {
-    const padded: { x: string; y: number }[] = [];
+): Graph {
+    const padded: Graph = [];
     const existingMap = new Map(data.map((d) => [d.x, d.y]));
     const d = new Date(startAt);
     if (unit === "hour") {
@@ -91,12 +91,22 @@ export async function GET(request: NextRequest) {
             unit
         );
 
-        const paddedData = padPageviewsData(
-            pageviewsData,
+        const paddedPageviewsData = padPageviewsData(
+            pageviewsData.pageviews,
             startAt,
             endAt,
             unit
         );
+        const paddedSessionsData = padPageviewsData(
+            pageviewsData.sessions,
+            startAt,
+            endAt,
+            unit
+        );
+        const paddedData = {
+            pageviews: paddedPageviewsData,
+            sessions: paddedSessionsData,
+        };
 
         cacheWrapper.set(cacheKey, paddedData, cacheTime);
 

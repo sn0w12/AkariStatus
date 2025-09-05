@@ -30,9 +30,11 @@ export interface UmamiStats {
     bounces: { value: number; prev?: number };
 }
 
+export type Graph = { x: string; y: number }[];
+
 export interface PageviewData {
-    x: string;
-    y: number;
+    pageviews: Graph;
+    sessions: Graph;
 }
 
 export type unit = "hour" | "day" | "week" | "month";
@@ -45,6 +47,8 @@ export type MetricsType =
     | "device"
     | "country"
     | "event";
+
+export type MetricsData = { x: string; y: number };
 
 async function getUmamiWebsites() {
     const response = await fetch("https://api.umami.is/v1/websites", {
@@ -82,7 +86,7 @@ async function getUmamiPageviewsSeries(
     startAt: number,
     endAt: number,
     unit: string
-): Promise<PageviewData[]> {
+): Promise<PageviewData> {
     const response = await fetch(
         `https://api.umami.is/v1/websites/${websiteId}/pageviews?startAt=${startAt}&endAt=${endAt}&unit=${unit}&timezone=Etc/UTC`,
         {
@@ -97,7 +101,7 @@ async function getUmamiPageviewsSeries(
         );
     }
     const data = await response.json();
-    return data.pageviews || [];
+    return data || { pageviews: [], sessions: [] };
 }
 
 async function getUmamiRealtimeVisitors(
@@ -148,7 +152,7 @@ async function getUmamiMetricsSeries(
     endAt: number,
     unit: string,
     type: MetricsType
-): Promise<PageviewData[]> {
+): Promise<MetricsData[]> {
     const response = await fetch(
         `https://api.umami.is/v1/websites/${websiteId}/metrics?startAt=${startAt}&endAt=${endAt}&unit=${unit}&type=${type}&timezone=Etc/UTC&limit=999999`,
         {

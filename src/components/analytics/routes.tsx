@@ -108,7 +108,7 @@ function RoutesPopover({
                     />
                 )}
                 <div
-                    className="border-t max-h-60 overflow-y-auto"
+                    className="border-t max-h-60 overflow-y-auto overscroll-contain"
                     data-scrollbar-custom="true"
                 >
                     <TooltipProvider>
@@ -140,7 +140,7 @@ export function Routes({
         <div>
             <h3 className="text-lg font-semibold">Routes</h3>
             <div
-                className="space-y-1 overflow-y-auto"
+                className="space-y-1 overflow-y-auto overscroll-contain"
                 style={{ maxHeight: 400 - 14 }}
                 data-scrollbar-custom="true"
             >

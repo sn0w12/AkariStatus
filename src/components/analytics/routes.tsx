@@ -1,6 +1,6 @@
 "use client";
 
-import { PageviewData, MetricsData } from "@/lib/api";
+import { MetricsData } from "@/lib/api";
 import { Separator } from "@/components/ui/separator";
 import {
     Popover,

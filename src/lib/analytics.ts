@@ -175,3 +175,20 @@ export function generatePlaceholderDataUTC(
         }));
     }
 }
+
+export function formatDate(date: string, unit: unit): string {
+    return unit === "hour"
+        ? new Date(date).toLocaleTimeString("en-US", {
+              hour: "numeric",
+              minute: "2-digit",
+              hour12: false,
+          })
+        : unit === "month"
+        ? new Date(date).toLocaleDateString("en-US", {
+              month: "short",
+          })
+        : new Date(date).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+          });
+}

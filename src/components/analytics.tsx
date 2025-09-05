@@ -14,6 +14,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Routes } from "@/components/analytics/routes";
 import { RealtimeVisitors } from "@/components/analytics/realtime";
 import {
+    formatDate,
     generatePlaceholderDataUTC,
     getTimeRangeClient,
 } from "@/lib/analytics";
@@ -56,21 +57,7 @@ export function Analytics() {
         const placeholder = generatePlaceholderDataUTC(timeframe, offset);
         const { unit } = getTimeRange(timeframe, offset);
         return placeholder.map((item) => ({
-            formattedDate:
-                unit === "hour"
-                    ? new Date(item.x).toLocaleTimeString("en-US", {
-                          hour: "numeric",
-                          minute: "2-digit",
-                          hour12: false,
-                      })
-                    : unit === "month"
-                    ? new Date(item.x).toLocaleDateString("en-US", {
-                          month: "short",
-                      })
-                    : new Date(item.x).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                      }),
+            formattedDate: formatDate(item.x.toString(), unit),
             Views: item.y,
             Sessions: 0,
         }));
@@ -251,21 +238,7 @@ export function Analytics() {
     useEffect(() => {
         if (pageviewsData) {
             const formatted = pageviewsData.pageviews.map((item, index) => ({
-                formattedDate:
-                    currentUnit === "hour"
-                        ? new Date(item.x).toLocaleTimeString("en-US", {
-                              hour: "numeric",
-                              minute: "2-digit",
-                              hour12: false,
-                          })
-                        : currentUnit === "month"
-                        ? new Date(item.x).toLocaleDateString("en-US", {
-                              month: "short",
-                          })
-                        : new Date(item.x).toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                          }),
+                formattedDate: formatDate(item.x, currentUnit),
                 Views: item.y,
                 Sessions: pageviewsData.sessions[index]?.y || 0,
             }));

@@ -7,182 +7,11 @@ import { TimeframeSelector } from "@/components/analytics/timeframe-selector";
 import { useState, useEffect, useCallback } from "react";
 import { Routes } from "@/components/analytics/routes";
 import { RealtimeVisitors } from "@/components/analytics/realtime";
-
-function getTimeRangeClient(timeframe: string, offset: number) {
-    const now = Date.now();
-    const nowDate = new Date(now);
-    let startAt: number;
-    let endAt: number;
-    let unit: unit;
-
-    if (timeframe === "this-month") {
-        const shiftedDate = new Date(now);
-        shiftedDate.setUTCMonth(shiftedDate.getUTCMonth() + offset);
-        const startOfMonth = new Date(
-            Date.UTC(
-                shiftedDate.getUTCFullYear(),
-                shiftedDate.getUTCMonth(),
-                1,
-                0,
-                0,
-                0,
-                0
-            )
-        );
-        const endOfMonth = new Date(
-            Date.UTC(
-                shiftedDate.getUTCFullYear(),
-                shiftedDate.getUTCMonth() + 1,
-                1,
-                0,
-                0,
-                0,
-                0
-            )
-        );
-        startAt = startOfMonth.getTime();
-        endAt = endOfMonth.getTime();
-        unit = "day";
-    } else if (timeframe === "this-year") {
-        const shiftedDate = new Date(now);
-        shiftedDate.setUTCFullYear(shiftedDate.getUTCFullYear() + offset);
-        const startOfYear = new Date(
-            Date.UTC(shiftedDate.getUTCFullYear(), 0, 1, 0, 0, 0, 0)
-        );
-        const endOfCurrentMonth = new Date(
-            Date.UTC(
-                shiftedDate.getUTCFullYear(),
-                shiftedDate.getUTCMonth() + 1,
-                1,
-                0,
-                0,
-                0,
-                0
-            )
-        );
-        startAt = startOfYear.getTime();
-        endAt = endOfCurrentMonth.getTime();
-        unit = "month";
-    } else {
-        switch (timeframe) {
-            case "1d":
-                const currentHourStart = new Date(
-                    Date.UTC(
-                        nowDate.getUTCFullYear(),
-                        nowDate.getUTCMonth(),
-                        nowDate.getUTCDate(),
-                        nowDate.getUTCHours(),
-                        0,
-                        0,
-                        0
-                    )
-                );
-                endAt = currentHourStart.getTime() + 60 * 60 * 1000;
-                startAt = endAt - 24 * 60 * 60 * 1000;
-                unit = "hour";
-                break;
-            case "this-week":
-                const dayOfWeek = nowDate.getUTCDay();
-                const startOfWeek = new Date(
-                    Date.UTC(
-                        nowDate.getUTCFullYear(),
-                        nowDate.getUTCMonth(),
-                        nowDate.getUTCDate() - dayOfWeek + 1,
-                        0,
-                        0,
-                        0,
-                        0
-                    )
-                );
-                const endOfWeek = new Date(
-                    Date.UTC(
-                        nowDate.getUTCFullYear(),
-                        nowDate.getUTCMonth(),
-                        nowDate.getUTCDate() - dayOfWeek + 7,
-                        23,
-                        59,
-                        59,
-                        999
-                    )
-                );
-                startAt = startOfWeek.getTime();
-                endAt = endOfWeek.getTime();
-                unit = "day";
-                break;
-            case "7d":
-                startAt = now - 7 * 24 * 60 * 60 * 1000;
-                endAt = now;
-                unit = "day";
-                break;
-            case "30d":
-                startAt = now - 30 * 24 * 60 * 60 * 1000;
-                endAt = now;
-                unit = "day";
-                break;
-            case "90d":
-                startAt = now - 90 * 24 * 60 * 60 * 1000;
-                endAt = now;
-                unit = "day";
-                break;
-            case "12m":
-                const twelveMonthsAgo = new Date(now);
-                twelveMonthsAgo.setUTCMonth(twelveMonthsAgo.getUTCMonth() - 12);
-                twelveMonthsAgo.setUTCDate(1);
-                twelveMonthsAgo.setUTCHours(0, 0, 0, 0);
-                startAt = twelveMonthsAgo.getTime();
-                endAt = now;
-                unit = "month";
-                break;
-            default:
-                startAt = now - 30 * 24 * 60 * 60 * 1000;
-                endAt = now;
-                unit = "day";
-                break;
-        }
-
-        const shiftMs = offset * 24 * 60 * 60 * 1000;
-        startAt += shiftMs;
-        endAt += shiftMs;
-
-        const diffDays = (endAt - startAt) / (24 * 60 * 60 * 1000);
-        if (diffDays <= 2) unit = "hour";
-        else if (diffDays <= 90) unit = "day";
-        else unit = "month";
-    }
-
-    return { startAt, endAt, unit };
-}
-
-const generatePlaceholderDataUTC = (
-    timeframe: string,
-    offset: number
-): { x: number; y: number }[] => {
-    const { startAt, endAt, unit } = getTimeRangeClient(timeframe, offset);
-
-    if (unit === "month") {
-        const startDate = new Date(startAt);
-        const endDate = new Date(endAt);
-        const numMonths =
-            (endDate.getUTCFullYear() - startDate.getUTCFullYear()) * 12 +
-            (endDate.getUTCMonth() - startDate.getUTCMonth());
-        const months: number[] = [];
-        let current = new Date(startAt);
-        for (let i = 0; i < numMonths; i++) {
-            months.push(current.getTime());
-            current = new Date(current);
-            current.setUTCMonth(current.getUTCMonth() + 1);
-        }
-        return months.map((x) => ({ x, y: 0 }));
-    } else {
-        const intervalMs =
-            unit === "hour" ? 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
-        const points = Math.ceil((endAt - startAt) / intervalMs);
-        return Array.from({ length: points }, (_, i) => ({
-            x: startAt + i * intervalMs,
-            y: 0,
-        }));
-    }
-};
+import {
+    generatePlaceholderDataUTC,
+    getTimeRangeClient,
+} from "@/lib/analytics";
+import { StatCard } from "./analytics/stat-card";
 
 export function Analytics() {
     const [timeframe, setTimeframe] = useState("30d");
@@ -648,80 +477,31 @@ export function Analytics() {
             </CardHeader>
             <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-                    <div className="text-center p-6 border rounded-lg bg-card">
-                        <h3 className="text-3xl font-bold mb-2">
-                            {Math.round(animatedPageviews)}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">Views</p>
-                        <p
-                            className={`text-xs ${
-                                pageviewsPercent > 0
-                                    ? "text-positive"
-                                    : pageviewsPercent < 0
-                                    ? "text-negative"
-                                    : "text-muted-foreground"
-                            }`}
-                        >
-                            {pageviewsPercent > 0 ? "+" : ""}
-                            {animatedPageviewsPercent.toFixed(1)}%
-                        </p>
-                    </div>
-                    <div className="text-center p-6 border rounded-lg bg-card">
-                        <h3 className="text-3xl font-bold mb-2">
-                            {Math.round(animatedVisitors)}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                            Visitors
-                        </p>
-                        <p
-                            className={`text-xs ${
-                                visitorsPercent > 0
-                                    ? "text-positive"
-                                    : visitorsPercent < 0
-                                    ? "text-negative"
-                                    : "text-muted-foreground"
-                            }`}
-                        >
-                            {visitorsPercent > 0 ? "+" : ""}
-                            {animatedVisitorsPercent.toFixed(1)}%
-                        </p>
-                    </div>
-                    <div className="text-center p-6 border rounded-lg bg-card">
-                        <h3 className="text-3xl font-bold mb-2">
-                            {Math.round(animatedVisits)}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">Visits</p>
-                        <p
-                            className={`text-xs ${
-                                visitsPercent > 0
-                                    ? "text-positive"
-                                    : visitsPercent < 0
-                                    ? "text-negative"
-                                    : "text-muted-foreground"
-                            }`}
-                        >
-                            {visitsPercent > 0 ? "+" : ""}
-                            {animatedVisitsPercent.toFixed(1)}%
-                        </p>
-                    </div>
-                    <div className="text-center p-6 border rounded-lg bg-card">
-                        <h3 className="text-3xl font-bold mb-2">
-                            {Math.round(animatedBounces)}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">Bounces</p>
-                        <p
-                            className={`text-xs ${
-                                bouncesPercent > 0
-                                    ? "text-negative"
-                                    : bouncesPercent < 0
-                                    ? "text-positive"
-                                    : "text-muted-foreground"
-                            }`}
-                        >
-                            {bouncesPercent > 0 ? "+" : ""}
-                            {animatedBouncesPercent.toFixed(1)}%
-                        </p>
-                    </div>
+                    <StatCard
+                        title="Views"
+                        value={animatedPageviews}
+                        percent={pageviewsPercent}
+                        animatedPercent={animatedPageviewsPercent}
+                    />
+                    <StatCard
+                        title="Visitors"
+                        value={animatedVisitors}
+                        percent={visitorsPercent}
+                        animatedPercent={animatedVisitorsPercent}
+                    />
+                    <StatCard
+                        title="Visits"
+                        value={animatedVisits}
+                        percent={visitsPercent}
+                        animatedPercent={animatedVisitsPercent}
+                    />
+                    <StatCard
+                        title="Bounces"
+                        value={animatedBounces}
+                        percent={bouncesPercent}
+                        animatedPercent={animatedBouncesPercent}
+                        invertPercentColor={true}
+                    />
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-2 w-full">

@@ -11,8 +11,13 @@ export default function RuntimeStatsCard() {
         try {
             const res = await fetch(`/api/runtime-stats`);
             if (res.ok) {
-                const data = await res.json();
-                return data as RuntimeStats[];
+                const data: RuntimeStats[] = await res.json();
+                const order = ["akari", "akari-preview", "akari-status"];
+                const sortedData = [...data].sort(
+                    (a, b) =>
+                        order.indexOf(a.pm2_name) - order.indexOf(b.pm2_name)
+                );
+                return sortedData;
             }
             throw new Error("Failed to fetch runtime stats");
         } catch {

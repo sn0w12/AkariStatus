@@ -41,7 +41,7 @@ export function RealtimeVisitors() {
             );
             if (intervalId) clearInterval(intervalId);
         };
-    }, [intervalId]);
+    }, []);
 
     return <Badge variant="secondary">{realtimeVisitors} Online</Badge>;
 }

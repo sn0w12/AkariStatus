@@ -1,5 +1,6 @@
 import { Analytics } from "@/components/analytics";
 import Uptime from "@/components/uptime";
+import RuntimeStatsCard from "@/components/runtime-stats";
 import Image from "next/image";
 import type { Metadata } from "next";
 
@@ -36,7 +37,12 @@ export default async function Home() {
                     </p>
                 </header>
 
-                <Uptime />
+                <div className="grid md:grid-cols-3 gap-8 mb-8">
+                    <RuntimeStatsCard />
+                    <div className="md:col-span-2 w-full h-full">
+                        <Uptime />
+                    </div>
+                </div>
                 <Analytics />
             </div>
         </div>

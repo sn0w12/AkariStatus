@@ -48,6 +48,42 @@ export type MetricsType =
     | "country"
     | "event";
 
+export interface RuntimeStats {
+    id: string;
+    pm2_name: string;
+    cpu: number | null;
+    memory: number | null;
+    uptime: number | null;
+    status:
+        | "online"
+        | "stopped"
+        | "stopping"
+        | "waiting restart"
+        | "launching"
+        | "errored"
+        | "one-launch-status"
+        | null;
+    created_at: string | null;
+}
+
+export interface Deployment {
+    id: string;
+    repo_url: string;
+    branch: string;
+    pm2_name: string;
+    port: string;
+    commit_hash: string | null;
+    start_time: string | null;
+    end_time: string | null;
+    duration_ms: number | null;
+    status: "started" | "superseded" | "completed" | "failed";
+    active: boolean;
+    success: boolean | null;
+    error_message: string | null;
+    created_at: string | null;
+    last_updated: string | null;
+}
+
 export type MetricsData = { x: string; y: number };
 
 async function getUmamiWebsites() {

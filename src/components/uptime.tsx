@@ -47,147 +47,153 @@ export default function Uptime() {
     }
 
     return (
-        <Card className="mb-8 gap-4 bg-card/50 backdrop-blur-sm">
-            <CardContent className="px-6">
-                <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-4">
-                        <div>
-                            <h3 className="font-semibold text-lg">
-                                {monitor?.friendly_name || "Monitor"}
-                            </h3>
-                            <Link
-                                href={monitor?.url || "#"}
-                                className="text-sm text-muted-foreground hover:underline"
+        <Card className="mb-8 h-full gap-4 bg-card/50 backdrop-blur-sm">
+            <CardContent className="px-6 flex flex-col h-full justify-between">
+                <div>
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-4">
+                            <div>
+                                <h3 className="font-semibold text-lg">
+                                    {monitor?.friendly_name || "Monitor"}
+                                </h3>
+                                <Link
+                                    href={monitor?.url || "#"}
+                                    className="text-sm text-muted-foreground hover:underline"
+                                >
+                                    {monitor?.url}
+                                </Link>
+                            </div>
+                            <Badge
+                                variant={
+                                    monitor?.status === 2
+                                        ? "default"
+                                        : "destructive"
+                                }
+                                className={
+                                    monitor?.status === 2
+                                        ? "bg-positive"
+                                        : "bg-negative"
+                                }
                             >
-                                {monitor?.url}
-                            </Link>
+                                {monitor?.status === 2 ? "Operational" : "Down"}
+                            </Badge>
                         </div>
-                        <Badge
-                            variant={
-                                monitor?.status === 2
-                                    ? "default"
-                                    : "destructive"
-                            }
-                            className={
-                                monitor?.status === 2
-                                    ? "bg-positive"
-                                    : "bg-negative"
-                            }
-                        >
-                            {monitor?.status === 2 ? "Operational" : "Down"}
-                        </Badge>
-                    </div>
-                    <div className="text-right">
-                        <p
-                            className={`text-2xl font-bold ${
-                                monitor?.all_time_uptime_ratio
-                                    ? getUptimeColor(
-                                          parseFloat(
-                                              monitor.all_time_uptime_ratio
+                        <div className="text-right">
+                            <p
+                                className={`text-2xl font-bold ${
+                                    monitor?.all_time_uptime_ratio
+                                        ? getUptimeColor(
+                                              parseFloat(
+                                                  monitor.all_time_uptime_ratio
+                                              )
                                           )
-                                      )
-                                    : "text-muted-foreground"
-                            }`}
-                        >
-                            {monitor?.all_time_uptime_ratio
-                                ? `${parseFloat(
-                                      monitor.all_time_uptime_ratio
-                                  ).toFixed(1)}%`
-                                : "N/A"}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                            Overall Uptime
-                        </p>
+                                        : "text-muted-foreground"
+                                }`}
+                            >
+                                {monitor?.all_time_uptime_ratio
+                                    ? `${parseFloat(
+                                          monitor.all_time_uptime_ratio
+                                      ).toFixed(1)}%`
+                                    : "N/A"}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                                Overall Uptime
+                            </p>
+                        </div>
                     </div>
-                </div>
 
-                {/* Uptime Statistics Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    {monitor?.custom_uptime_ratio && (
-                        <>
-                            <div className="text-center p-4 border rounded-lg bg-card">
-                                <p
-                                    className={`text-xl font-semibold ${getUptimeColor(
-                                        parseFloat(
+                    {/* Uptime Statistics Grid */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        {monitor?.custom_uptime_ratio && (
+                            <>
+                                <div className="text-center p-4 border rounded-lg bg-card">
+                                    <p
+                                        className={`text-xl font-semibold ${getUptimeColor(
+                                            parseFloat(
+                                                monitor.custom_uptime_ratio.split(
+                                                    "-"
+                                                )[0]
+                                            )
+                                        )}`}
+                                    >
+                                        {parseFloat(
                                             monitor.custom_uptime_ratio.split(
                                                 "-"
                                             )[0]
-                                        )
-                                    )}`}
-                                >
-                                    {parseFloat(
-                                        monitor.custom_uptime_ratio.split(
-                                            "-"
-                                        )[0]
-                                    ).toFixed(1)}
-                                    %
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                    7-day uptime
-                                </p>
-                            </div>
-                            <div className="text-center p-4 border rounded-lg bg-card">
-                                <p
-                                    className={`text-xl font-semibold ${getUptimeColor(
-                                        parseFloat(
+                                        ).toFixed(1)}
+                                        %
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                        7-day uptime
+                                    </p>
+                                </div>
+                                <div className="text-center p-4 border rounded-lg bg-card">
+                                    <p
+                                        className={`text-xl font-semibold ${getUptimeColor(
+                                            parseFloat(
+                                                monitor.custom_uptime_ratio.split(
+                                                    "-"
+                                                )[1]
+                                            )
+                                        )}`}
+                                    >
+                                        {parseFloat(
                                             monitor.custom_uptime_ratio.split(
                                                 "-"
                                             )[1]
+                                        ).toFixed(1)}
+                                        %
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                        30-day uptime
+                                    </p>
+                                </div>
+                            </>
+                        )}
+                        {monitor?.average_response_time && (
+                            <div className="text-center p-4 border rounded-lg bg-card">
+                                <p
+                                    className={`text-xl font-semibold ${getResponseColor(
+                                        parseFloat(
+                                            monitor.average_response_time
                                         )
                                     )}`}
                                 >
                                     {parseFloat(
-                                        monitor.custom_uptime_ratio.split(
-                                            "-"
-                                        )[1]
+                                        monitor.average_response_time
                                     ).toFixed(1)}
-                                    %
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                    30-day uptime
-                                </p>
-                            </div>
-                        </>
-                    )}
-                    {monitor?.average_response_time && (
-                        <div className="text-center p-4 border rounded-lg bg-card">
-                            <p
-                                className={`text-xl font-semibold ${getResponseColor(
-                                    parseFloat(monitor.average_response_time)
-                                )}`}
-                            >
-                                {parseFloat(
-                                    monitor.average_response_time
-                                ).toFixed(1)}
-                                ms
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                                Avg Response
-                            </p>
-                        </div>
-                    )}
-                    {monitor?.response_times &&
-                        monitor.response_times.length > 0 && (
-                            <div className="text-center p-4 border rounded-lg bg-card">
-                                <p
-                                    className={`text-xl font-semibold ${getResponseColor(
-                                        monitor.response_times[
-                                            monitor.response_times.length - 1
-                                        ]?.value || 0
-                                    )}`}
-                                >
-                                    {
-                                        monitor.response_times[
-                                            monitor.response_times.length - 1
-                                        ]?.value
-                                    }
                                     ms
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                    Latest Response
+                                    Avg Response
                                 </p>
                             </div>
                         )}
+                        {monitor?.response_times &&
+                            monitor.response_times.length > 0 && (
+                                <div className="text-center p-4 border rounded-lg bg-card">
+                                    <p
+                                        className={`text-xl font-semibold ${getResponseColor(
+                                            monitor.response_times[
+                                                monitor.response_times.length -
+                                                    1
+                                            ]?.value || 0
+                                        )}`}
+                                    >
+                                        {
+                                            monitor.response_times[
+                                                monitor.response_times.length -
+                                                    1
+                                            ]?.value
+                                        }
+                                        ms
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                        Latest Response
+                                    </p>
+                                </div>
+                            )}
+                    </div>
                 </div>
 
                 {/* Recent Events */}

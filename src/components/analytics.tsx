@@ -2,11 +2,11 @@
 
 import { UmamiStats, PageviewData, getTimeRange, unit } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { PageviewsChart } from "@/components/analytics/pageviews-chart";
 import { TimeframeSelector } from "@/components/analytics/timeframe-selector";
 import { useState, useEffect, useCallback } from "react";
 import { Routes } from "@/components/analytics/routes";
+import { RealtimeVisitors } from "@/components/analytics/realtime";
 
 function getTimeRangeClient(timeframe: string, offset: number) {
     const now = Date.now();
@@ -213,8 +213,6 @@ export function Analytics() {
     const [visitsPercent, setVisitsPercent] = useState(0);
     const [bouncesPercent, setBouncesPercent] = useState(0);
 
-    const [realtimeVisitors, setRealtimeVisitors] = useState(0);
-
     const [offset, setOffset] = useState<number>(0);
     const [currentUnit, setCurrentUnit] = useState<unit>(
         () => getTimeRange(timeframe).unit
@@ -339,18 +337,6 @@ export function Analytics() {
         []
     );
 
-    const fetchRealtime = async () => {
-        try {
-            const res = await fetch("/api/umami/realtime");
-            if (res.ok) {
-                const data = await res.json();
-                setRealtimeVisitors(data.visitors);
-            }
-        } catch (error) {
-            console.error("Failed to fetch realtime visitors", error);
-        }
-    };
-
     useEffect(() => {
         fetchData(timeframe, offset);
     }, [timeframe, offset, fetchData]);
@@ -451,12 +437,6 @@ export function Analytics() {
             setChartData(formatted);
         }
     }, [pageviewsData, currentUnit]);
-
-    useEffect(() => {
-        fetchRealtime();
-        const interval = setInterval(fetchRealtime, 120000);
-        return () => clearInterval(interval);
-    }, []);
 
     const resetDataAndUpdateChart = (
         currentTimeframe: string,
@@ -657,7 +637,7 @@ export function Analytics() {
                     <CardTitle>
                         Analytics ({getDisplayText(timeframe, days, offset)})
                     </CardTitle>
-                    <Badge variant="secondary">{realtimeVisitors} Online</Badge>
+                    <RealtimeVisitors />
                 </div>
                 <TimeframeSelector
                     onTimeframeChange={handleTimeframeChange}

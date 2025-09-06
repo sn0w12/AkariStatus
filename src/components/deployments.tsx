@@ -37,7 +37,14 @@ import {
     ColumnFiltersState,
 } from "@tanstack/react-table";
 import Link from "next/link";
-import { CheckCircle, XCircle, ChevronUp, ChevronDown } from "lucide-react";
+import {
+    CheckCircle,
+    XCircle,
+    ChevronUp,
+    ChevronDown,
+    ChevronLeft,
+    ChevronRight,
+} from "lucide-react";
 
 export function DeploymentsDialog() {
     const [open, setOpen] = useState(false);
@@ -49,25 +56,35 @@ export function DeploymentsDialog() {
     ]);
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const [now, setNow] = useState(new Date());
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [limit] = useState(20);
 
-    const fetchDeployments = useCallback(async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const res = await fetch("/api/deployments");
-            if (!res.ok) throw new Error("Failed to fetch deployments");
-            const data: Deployment[] = await res.json();
-            setDeployments(data);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : "Unknown error");
-        } finally {
-            setLoading(false);
-        }
-    }, []);
+    const fetchDeployments = useCallback(
+        async (page: number) => {
+            setLoading(true);
+            setError(null);
+            try {
+                const res = await fetch(
+                    `/api/deployments?page=${page}&limit=${limit}`
+                );
+                if (!res.ok) throw new Error("Failed to fetch deployments");
+                const responseData = await res.json();
+                setDeployments(responseData.data);
+                setTotalPages(responseData.pagination.totalPages);
+                setCurrentPage(responseData.pagination.page);
+            } catch (err) {
+                setError(err instanceof Error ? err.message : "Unknown error");
+            } finally {
+                setLoading(false);
+            }
+        },
+        [limit]
+    );
 
     useEffect(() => {
         if (open) {
-            fetchDeployments();
+            fetchDeployments(1);
         }
     }, [open, fetchDeployments]);
 
@@ -243,6 +260,18 @@ export function DeploymentsDialog() {
         );
         return Array.from(statuses).sort();
     }, [table]);
+
+    const handlePrevPage = () => {
+        if (currentPage > 1) {
+            fetchDeployments(currentPage - 1);
+        }
+    };
+
+    const handleNextPage = () => {
+        if (currentPage < totalPages) {
+            fetchDeployments(currentPage + 1);
+        }
+    };
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -472,6 +501,27 @@ export function DeploymentsDialog() {
                                 </TableBody>
                             </Table>
                         )}
+                        <div className="flex justify-between items-center mt-4">
+                            <Button
+                                variant="outline"
+                                onClick={handlePrevPage}
+                                disabled={currentPage <= 1}
+                            >
+                                <ChevronLeft size={16} className="mr-1" />
+                                Previous
+                            </Button>
+                            <span className="text-sm text-muted-foreground">
+                                Page {currentPage} of {totalPages}
+                            </span>
+                            <Button
+                                variant="outline"
+                                onClick={handleNextPage}
+                                disabled={currentPage >= totalPages}
+                            >
+                                Next
+                                <ChevronRight size={16} className="ml-1" />
+                            </Button>
+                        </div>
                     </div>
                 )}
             </DialogContent>

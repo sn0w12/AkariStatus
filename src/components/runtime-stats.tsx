@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useIntervalFetch } from "@/hooks/use-interval-fetch";
 import { useCallback } from "react";
+import { DeploymentsDialog } from "./deployments";
 
 export default function RuntimeStatsCard() {
     const fetchData = useCallback(async () => {
@@ -86,7 +87,12 @@ export default function RuntimeStatsCard() {
     return (
         <Card className="gap-4 bg-card/50 backdrop-blur-sm">
             <CardHeader>
-                <CardTitle>Runtime Stats</CardTitle>
+                <CardTitle>
+                    <div className="flex items-center justify-between">
+                        <span>Runtime Stats</span>
+                        <DeploymentsDialog />
+                    </div>
+                </CardTitle>
             </CardHeader>
             <CardContent>
                 {stats.length === 0 ? (

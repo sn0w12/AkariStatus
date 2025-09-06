@@ -241,12 +241,21 @@ export function DeploymentsDialog() {
     });
 
     const uniqueBranches = useMemo(() => {
-        const filteredRows = table.getFilteredRowModel().rows;
-        const branches = new Set(
-            filteredRows.map((row) => row.original.branch)
-        );
+        let filtered = deployments;
+        const repoFilter = table
+            .getColumn("repo_url")
+            ?.getFilterValue() as string;
+        if (repoFilter && repoFilter !== "all") {
+            filtered = filtered.filter((d) => d.repo_url === repoFilter);
+        }
+        const activeFilter = table.getColumn("active")?.getFilterValue();
+        if (activeFilter !== undefined) {
+            filtered = filtered.filter((d) => d.active === activeFilter);
+        }
+        const branches = new Set(filtered.map((d) => d.branch));
         return Array.from(branches).sort();
-    }, [table]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [deployments, columnFilters, table]);
 
     const uniqueRepos = useMemo(() => {
         const repos = new Set(deployments.map((d) => d.repo_url));
@@ -254,12 +263,27 @@ export function DeploymentsDialog() {
     }, [deployments]);
 
     const uniqueStatuses = useMemo(() => {
-        const filteredRows = table.getFilteredRowModel().rows;
-        const statuses = new Set(
-            filteredRows.map((row) => row.original.status)
-        );
+        let filtered = deployments;
+        const repoFilter = table
+            .getColumn("repo_url")
+            ?.getFilterValue() as string;
+        if (repoFilter && repoFilter !== "all") {
+            filtered = filtered.filter((d) => d.repo_url === repoFilter);
+        }
+        const activeFilter = table.getColumn("active")?.getFilterValue();
+        if (activeFilter !== undefined) {
+            filtered = filtered.filter((d) => d.active === activeFilter);
+        }
+        const branchFilter = table
+            .getColumn("branch")
+            ?.getFilterValue() as string;
+        if (branchFilter && branchFilter !== "all") {
+            filtered = filtered.filter((d) => d.branch === branchFilter);
+        }
+        const statuses = new Set(filtered.map((d) => d.status));
         return Array.from(statuses).sort();
-    }, [table]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [deployments, columnFilters, table]);
 
     const handlePrevPage = () => {
         if (currentPage > 1) {

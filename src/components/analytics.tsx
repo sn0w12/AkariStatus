@@ -25,7 +25,7 @@ import { StatCard } from "./analytics/stat-card";
 import { animateNumber } from "@/lib/utils";
 
 export function Analytics() {
-    const [timeframe, setTimeframe] = useState("30d");
+    const [timeframe, setTimeframe] = useState("this-month");
     const [days, setDays] = useState(30);
     const [stats, setStats] = useState<UmamiStats | undefined>();
     const [pageviewsData, setPageviewsData] = useState<

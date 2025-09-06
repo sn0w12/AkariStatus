@@ -112,7 +112,7 @@ export function DeploymentsDialog() {
 
     const formatDate = (date: string | null) => {
         if (!date) return "N/A";
-        return new Date(date).toLocaleString();
+        return new Date(date).toLocaleString(undefined, { hour12: false });
     };
 
     const getStatusColor = (status: string) => {
@@ -191,7 +191,7 @@ export function DeploymentsDialog() {
             header: "Start Time",
             enableSorting: true,
             cell: ({ getValue }) => (
-                <span className="text-muted-foreground">
+                <span className="text-muted-foreground font-mono">
                     {formatDate(getValue<string | null>())}
                 </span>
             ),
@@ -211,13 +211,13 @@ export function DeploymentsDialog() {
                     const diff =
                         start !== null ? now.getTime() - start.getTime() : 0;
                     return (
-                        <span className="text-muted-foreground">
+                        <span className="text-muted-foreground font-mono">
                             {formatDuration(diff)}
                         </span>
                     );
                 } else {
                     return (
-                        <span className="text-muted-foreground">
+                        <span className="text-muted-foreground font-mono">
                             {formatDuration(ms)}
                         </span>
                     );

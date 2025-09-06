@@ -276,7 +276,12 @@ export function DeploymentsDialog() {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="outline">View Deployments</Button>
+                <Button
+                    variant="default"
+                    className="bg-card text-card-foreground border hover:bg-accent hover:text-accent-foreground transition-none"
+                >
+                    View Deployments
+                </Button>
             </DialogTrigger>
             <DialogContent
                 className="sm:max-w-[60vw] max-h-[80vh] overflow-y-auto"
@@ -503,7 +508,8 @@ export function DeploymentsDialog() {
                         )}
                         <div className="flex justify-between items-center mt-4">
                             <Button
-                                variant="outline"
+                                variant="default"
+                                className="bg-card text-card-foreground border hover:bg-accent hover:text-accent-foreground transition-none"
                                 onClick={handlePrevPage}
                                 disabled={currentPage <= 1}
                             >
@@ -514,7 +520,8 @@ export function DeploymentsDialog() {
                                 Page {currentPage} of {totalPages}
                             </span>
                             <Button
-                                variant="outline"
+                                variant="default"
+                                className="bg-card text-card-foreground border hover:bg-accent hover:text-accent-foreground transition-none"
                                 onClick={handleNextPage}
                                 disabled={currentPage >= totalPages}
                             >

@@ -4,6 +4,7 @@ interface StatCardProps {
     percent: number;
     animatedPercent: number;
     invertPercentColor?: boolean;
+    displayValue?: string;
 }
 
 export function StatCard({
@@ -12,6 +13,7 @@ export function StatCard({
     percent,
     animatedPercent,
     invertPercentColor = false,
+    displayValue,
 }: StatCardProps) {
     const percentColor = invertPercentColor
         ? percent > 0
@@ -27,7 +29,9 @@ export function StatCard({
 
     return (
         <div className="text-center p-6 border rounded-lg bg-card">
-            <h3 className="text-3xl font-bold mb-2">{Math.round(value)}</h3>
+            <h3 className="text-3xl font-bold mb-2">
+                {displayValue || Math.round(value)}
+            </h3>
             <p className="text-sm text-muted-foreground">{title}</p>
             <p className={`text-xs ${percentColor}`}>
                 {percent > 0 ? "+" : ""}

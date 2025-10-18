@@ -41,15 +41,27 @@ export function Analytics() {
     const [animatedVisitors, setAnimatedVisitors] = useState(0);
     const [animatedVisits, setAnimatedVisits] = useState(0);
     const [animatedBounces, setAnimatedBounces] = useState(0);
+    const [animatedTotaltime, setAnimatedTotaltime] = useState(0);
     const [animatedPageviewsPercent, setAnimatedPageviewsPercent] = useState(0);
     const [animatedVisitorsPercent, setAnimatedVisitorsPercent] = useState(0);
     const [animatedVisitsPercent, setAnimatedVisitsPercent] = useState(0);
     const [animatedBouncesPercent, setAnimatedBouncesPercent] = useState(0);
+    const [animatedTotaltimePercent, setAnimatedTotaltimePercent] = useState(0);
 
     const [pageviewsPercent, setPageviewsPercent] = useState(0);
     const [visitorsPercent, setVisitorsPercent] = useState(0);
     const [visitsPercent, setVisitsPercent] = useState(0);
     const [bouncesPercent, setBouncesPercent] = useState(0);
+    const [totaltimePercent, setTotaltimePercent] = useState(0);
+
+    const [formattedTotaltime, setFormattedTotaltime] = useState("0m 0s");
+
+    const formatTime = (seconds: number, visits: number) => {
+        if (seconds === 0 || visits === 0) return "0m 0s";
+        const minutes = Math.floor(seconds / visits / 60);
+        const remainingSeconds = Math.round(seconds % 60);
+        return `${minutes}m ${remainingSeconds}s`;
+    };
 
     const [offset, setOffset] = useState<number>(0);
     const [currentUnit, setCurrentUnit] = useState<unit>(
@@ -127,55 +139,71 @@ export function Analytics() {
     useEffect(() => {
         if (stats) {
             // Animate stats values
-            if (stats.pageviews?.value)
-                animateNumber(stats.pageviews.value, setAnimatedPageviews);
-            if (stats.visitors?.value)
-                animateNumber(stats.visitors.value, setAnimatedVisitors);
-            if (stats.visits?.value)
-                animateNumber(stats.visits.value, setAnimatedVisits);
-            if (stats.bounces?.value)
-                animateNumber(stats.bounces.value, setAnimatedBounces);
+            if (stats.pageviews)
+                animateNumber(stats.pageviews, setAnimatedPageviews);
+            if (stats.visitors)
+                animateNumber(stats.visitors, setAnimatedVisitors);
+            if (stats.visits) animateNumber(stats.visits, setAnimatedVisits);
+            if (stats.bounces) animateNumber(stats.bounces, setAnimatedBounces);
+            if (stats.totaltime)
+                animateNumber(stats.totaltime, setAnimatedTotaltime);
 
             // Calculate and animate % changes, default to 0% if no prev or prev is 0
             let percent = 0;
-            if (stats.pageviews?.prev && stats.pageviews.prev !== 0) {
+            if (
+                stats.comparison.pageviews &&
+                stats.comparison.pageviews !== 0
+            ) {
                 percent =
-                    ((stats.pageviews.value - stats.pageviews.prev) /
-                        stats.pageviews.prev) *
+                    ((stats.pageviews - stats.comparison.pageviews) /
+                        stats.comparison.pageviews) *
                     100;
             }
             setPageviewsPercent(percent);
             animateNumber(percent, setAnimatedPageviewsPercent);
 
             percent = 0;
-            if (stats.visitors?.prev && stats.visitors.prev !== 0) {
+            if (stats.comparison.visitors && stats.comparison.visitors !== 0) {
                 percent =
-                    ((stats.visitors.value - stats.visitors.prev) /
-                        stats.visitors.prev) *
+                    ((stats.visitors - stats.comparison.visitors) /
+                        stats.comparison.visitors) *
                     100;
             }
             setVisitorsPercent(percent);
             animateNumber(percent, setAnimatedVisitorsPercent);
 
             percent = 0;
-            if (stats.visits?.prev && stats.visits.prev !== 0) {
+            if (stats.comparison.visits && stats.comparison.visits !== 0) {
                 percent =
-                    ((stats.visits.value - stats.visits.prev) /
-                        stats.visits.prev) *
+                    ((stats.visits - stats.comparison.visits) /
+                        stats.comparison.visits) *
                     100;
             }
             setVisitsPercent(percent);
             animateNumber(percent, setAnimatedVisitsPercent);
 
             percent = 0;
-            if (stats.bounces?.prev && stats.bounces.prev !== 0) {
+            if (stats.comparison.bounces && stats.comparison.bounces !== 0) {
                 percent =
-                    ((stats.bounces.value - stats.bounces.prev) /
-                        stats.bounces.prev) *
+                    ((stats.bounces - stats.comparison.bounces) /
+                        stats.comparison.bounces) *
                     100;
             }
             setBouncesPercent(percent);
             animateNumber(percent, setAnimatedBouncesPercent);
+
+            percent = 0;
+            if (
+                stats.comparison.totaltime &&
+                stats.comparison.totaltime !== 0
+            ) {
+                percent =
+                    ((stats.totaltime - stats.comparison.totaltime) /
+                        stats.comparison.totaltime) *
+                    100;
+            }
+            setTotaltimePercent(percent);
+            animateNumber(percent, setAnimatedTotaltimePercent);
         }
     }, [stats]);
 
@@ -189,6 +217,10 @@ export function Analytics() {
             setChartData(formatted);
         }
     }, [pageviewsData, currentUnit]);
+
+    useEffect(() => {
+        setFormattedTotaltime(formatTime(animatedTotaltime, animatedVisits));
+    }, [animatedTotaltime, animatedVisits]);
 
     const resetDataAndUpdateChart = (
         currentTimeframe: string,
@@ -205,15 +237,19 @@ export function Analytics() {
         setAnimatedVisitors(0);
         setAnimatedVisits(0);
         setAnimatedBounces(0);
+        setAnimatedTotaltime(0);
         setAnimatedPageviewsPercent(0);
         setAnimatedVisitorsPercent(0);
         setAnimatedVisitsPercent(0);
         setAnimatedBouncesPercent(0);
+        setAnimatedTotaltimePercent(0);
         // Reset final percentages
         setPageviewsPercent(0);
         setVisitorsPercent(0);
         setVisitsPercent(0);
         setBouncesPercent(0);
+        setTotaltimePercent(0);
+        setFormattedTotaltime("0m 0s");
         // Update placeholder chart data
         const placeholder = generatePlaceholderDataUTC(
             currentTimeframe,
@@ -363,7 +399,7 @@ export function Analytics() {
                 />
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
                     <StatCard
                         title="Views"
                         value={animatedPageviews}
@@ -388,6 +424,13 @@ export function Analytics() {
                         percent={bouncesPercent}
                         animatedPercent={animatedBouncesPercent}
                         invertPercentColor={true}
+                    />
+                    <StatCard
+                        title="Visit Duration"
+                        value={animatedTotaltime}
+                        percent={totaltimePercent}
+                        animatedPercent={animatedTotaltimePercent}
+                        displayValue={formattedTotaltime}
                     />
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

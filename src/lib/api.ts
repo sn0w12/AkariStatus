@@ -24,10 +24,18 @@ export interface Monitor {
 }
 
 export interface UmamiStats {
-    pageviews: { value: number; prev?: number };
-    visitors: { value: number; prev?: number };
-    visits: { value: number; prev?: number };
-    bounces: { value: number; prev?: number };
+    pageviews: number;
+    visitors: number;
+    visits: number;
+    bounces: number;
+    totaltime: number;
+    comparison: {
+        pageviews: number;
+        visitors: number;
+        visits: number;
+        bounces: number;
+        totaltime: number;
+    };
 }
 
 export type Graph = { x: string; y: number }[];
@@ -47,24 +55,6 @@ export type MetricsType =
     | "device"
     | "country"
     | "event";
-
-export interface RuntimeStats {
-    id: string;
-    pm2_name: string;
-    cpu: number | null;
-    memory: number | null;
-    uptime: number | null;
-    status:
-        | "online"
-        | "stopped"
-        | "stopping"
-        | "waiting restart"
-        | "launching"
-        | "errored"
-        | "one-launch-status"
-        | null;
-    created_at: string | null;
-}
 
 export interface Deployment {
     id: string;
